@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>ToitskyMA, horinf</Authors>
+    <Company>horinf</Company>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Copyright>ToitskyMA, horinf</Copyright>
+    <PackageTags>JWT</PackageTags>
+    <RepositoryUrl>https://github.com/horinf/ToolsToLive.AuthCore</RepositoryUrl>
+    <Description>Helper to deal with JWT</Description>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>
