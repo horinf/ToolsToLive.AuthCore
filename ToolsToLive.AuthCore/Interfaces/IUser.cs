@@ -8,7 +8,7 @@ namespace ToolsToLive.AuthCore.Interfaces
         string Id { get; }
         string UserName { get; }
         string PasswordHash { get; set; }
-        IRole Role { get; }
+        List<IRole> Roles { get; }
         List<Claim> Claims { get; }
     }
 }
