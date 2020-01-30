@@ -4,7 +4,7 @@ using ToolsToLive.AuthCore.Model;
 
 namespace ToolsToLive.AuthCore.Interfaces
 {
-    public interface IAuthenticationService<T> where T : IUser
+    public interface IAuthService<T> where T : IUser
     {
         ClaimsPrincipal Auth(string token);
         Task<AuthResult<T>> CheckPasswordAndGenerateToken(string userNameOrEmail, string password);

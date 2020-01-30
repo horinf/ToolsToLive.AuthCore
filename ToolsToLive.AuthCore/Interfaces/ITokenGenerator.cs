@@ -5,6 +5,7 @@ namespace ToolsToLive.AuthCore.Interfaces
 {
     public interface ITokenGenerator
     {
-        string GenerateToken(ClaimsIdentity identity, DateTime notBefore, DateTime expires);
+        IAuthToken GenerateToken<TUser>(TUser user) where TUser : IUser;
+        IAuthToken GenerateRefreshToken();
     }
 }

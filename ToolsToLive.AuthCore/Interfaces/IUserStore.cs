@@ -3,14 +3,14 @@ using System.Threading.Tasks;
 
 namespace ToolsToLive.AuthCore.Interfaces
 {
-    public interface IUserStore
+    public interface IUserStore<TUser> where TUser : IUser
     {
-        Task<IUser> GetUserByUserName(string userName);
-        Task<IUser> GetUserByEmail(string email);
-        Task<IUser> GetUserById(string id);
+        Task<TUser> GetUserByUserName(string userName);
+        Task<TUser> GetUserByEmail(string email);
+        Task<TUser> GetUserById(string id);
 
         Task<IAuthToken> GetRefreshToken(string userName);
-        Task SaveRefreshToken(string userName, string refreshToken, DateTime issueDate, DateTime expireDate);
+        Task SaveRefreshToken(IAuthToken authToken);
         Task UpdateRefreshToken(string userName, string refreshToken);
         Task DeleteRefreshToken(string userName);
         Task UpdateLastActivity(string userId);

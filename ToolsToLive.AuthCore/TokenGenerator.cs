@@ -6,38 +6,54 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using ToolsToLive.AuthCore.Interfaces;
+using ToolsToLive.AuthCore.Model;
 
 namespace ToolsToLive.AuthCore
 {
     public class TokenGenerator : ITokenGenerator
     {
         private readonly IOptions<AuthOptions> _options;
+        private readonly IIdentityService _identityService;
 
         public TokenGenerator(
-            IOptions<AuthOptions> options)
+            IOptions<AuthOptions> options,
+            IIdentityService identityService
+            )
         {
             _options = options;
+            _identityService = identityService;
         }
 
-        public string GenerateToken(ClaimsIdentity identity, DateTime notBefore, DateTime expires)
+        public IAuthToken GenerateToken<TUser>(TUser user) where TUser: IUser
         {
             var authOptions = _options.Value;
+
+            DateTime now = DateTime.UtcNow;
+            DateTime expires = now.Add(_options.Value.TokenLifetime);
+
+            ClaimsIdentity identity = _identityService.GetIdentity(user);
 
             var jwt = new JwtSecurityToken(
                 issuer: authOptions.Issuer,
                 audience: authOptions.Audience,
                 claims: identity.Claims,
-                notBefore: notBefore,
+                notBefore: now,
                 expires: expires,
                 signingCredentials: GetSigningCredentials()
                 );
 
             string encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-            return encodedJwt;
+            return new AuthToken
+            {
+                Token = encodedJwt,
+                IssueDate = now,
+                ExpireDate = expires,
+                UserName = user.UserName,
+            };
         }
 
-        public string GenerateRefreshToken()
+        public IAuthToken GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
             using (var rng = RandomNumberGenerator.Create())

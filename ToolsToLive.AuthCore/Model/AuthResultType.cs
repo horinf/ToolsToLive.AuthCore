@@ -6,6 +6,7 @@
         UserNotFound,
         PasswordIsWrong,
         RefreshTokenExpired,
+        RefreshTokenWrong,
         Success
     }
 }
