@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -9,32 +9,29 @@ namespace ToolsToLive.AuthCore
 {
     public class AuthService<TUser> : IAuthService<TUser> where TUser : IUser
     {
-        private readonly IOptions<AuthOptions> _options;
         private readonly IIdentityService _identityService;
         private readonly ITokenGenerator _tokenGenerator;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IUserStore<TUser> _userStore;
 
         public AuthService(
-            IOptions<AuthOptions> options,
             IIdentityService identityService,
             ITokenGenerator tokenGenerator,
             IPasswordHasher passwordHasher,
             IUserStore<TUser> userStore
             )
         {
-            _options = options;
             _identityService = identityService;
             _tokenGenerator = tokenGenerator;
             _passwordHasher = passwordHasher;
             _userStore = userStore;
         }
 
-        public ClaimsPrincipal Auth(string token)
-        {
-            var principal = _identityService.GetPrincipalFromToken(token);
-            return principal;
-        }
+        //public ClaimsPrincipal Auth(string token)
+        //{
+        //    var principal = _identityService.GetPrincipalFromToken(token);
+        //    return principal;
+        //}
 
         public async Task<AuthResult<TUser>> CheckPasswordAndGenerateToken(string userNameOrEmail, string password)
         {
@@ -66,9 +63,28 @@ namespace ToolsToLive.AuthCore
 
         public async Task<AuthResult<TUser>> RefreshToken(string token, string refreshToken)
         {
-            ClaimsPrincipal principal = _identityService.GetPrincipalFromToken(token);
+            //verify token
+            ClaimsPrincipal principal;
+            try
+            {
+                // try to resolve token to claims principal
+                principal = _identityService.GetPrincipalFromToken(token);
+            }
+            catch (SecurityTokenException)
+            {
+                return new AuthResult<TUser>(AuthResultType.Fault);
+            }
+
             var username = principal.Identity.Name;
 
+            //verify refresh token
+            (bool, AuthResult<TUser>) verRefreshToken = await ValidaateRefreshToken(username, refreshToken);
+            if (!verRefreshToken.Item1)
+            {
+                return verRefreshToken.Item2;
+            }
+
+            // retreive user from db
             TUser user = await _userStore.GetUserByUserName(username);
 
             if (user == null)
@@ -76,6 +92,7 @@ namespace ToolsToLive.AuthCore
                 return new AuthResult<TUser>(AuthResultType.UserNotFound);
             }
 
+            // create token and refresh token
             IAuthToken tokenInfo = await _tokenGenerator.GenerateToken(user);
             IAuthToken refreshTokenInfo = await _tokenGenerator.GenerateRefreshToken(user);
             await _userStore.UpdateRefreshToken(username, refreshTokenInfo.Token);
