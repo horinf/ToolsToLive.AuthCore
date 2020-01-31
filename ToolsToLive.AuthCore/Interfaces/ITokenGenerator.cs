@@ -1,11 +1,10 @@
-﻿using System;
-using System.Security.Claims;
+﻿using System.Threading.Tasks;
 
 namespace ToolsToLive.AuthCore.Interfaces
 {
     public interface ITokenGenerator
     {
-        IAuthToken GenerateToken<TUser>(TUser user) where TUser : IUser;
-        IAuthToken GenerateRefreshToken();
+        Task<IAuthToken> GenerateToken<TUser>(TUser user) where TUser : IUser;
+        Task<IAuthToken> GenerateRefreshToken(IUser user);
     }
 }

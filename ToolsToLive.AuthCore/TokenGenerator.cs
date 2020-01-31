@@ -5,6 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using ToolsToLive.AuthCore.Interfaces;
 using ToolsToLive.AuthCore.Model;
 
@@ -24,7 +25,7 @@ namespace ToolsToLive.AuthCore
             _identityService = identityService;
         }
 
-        public IAuthToken GenerateToken<TUser>(TUser user) where TUser: IUser
+        public Task<IAuthToken> GenerateToken<TUser>(TUser user) where TUser: IUser
         {
             var authOptions = _options.Value;
 
@@ -44,23 +45,39 @@ namespace ToolsToLive.AuthCore
 
             string encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-            return new AuthToken
+            IAuthToken token = new AuthToken
             {
                 Token = encodedJwt,
                 IssueDate = now,
                 ExpireDate = expires,
                 UserName = user.UserName,
             };
+
+            return Task.FromResult(token);
         }
 
-        public IAuthToken GenerateRefreshToken()
+        public Task<IAuthToken> GenerateRefreshToken(IUser user)
         {
             var randomNumber = new byte[32];
+            string tokenString;
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(randomNumber);
-                return Convert.ToBase64String(randomNumber);
+                tokenString = Convert.ToBase64String(randomNumber);
             }
+
+            var now = DateTime.UtcNow;
+            var expires = now.Add(_options.Value.RefreshTokenLifeTime);
+
+            IAuthToken refreshToken = new AuthToken
+            {
+                Token = tokenString,
+                IssueDate = now,
+                ExpireDate = expires,
+                UserName = user.UserName,
+            };
+
+            return Task.FromResult(refreshToken);
         }
 
         private SigningCredentials GetSigningCredentials()

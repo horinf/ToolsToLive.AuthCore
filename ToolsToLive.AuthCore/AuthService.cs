@@ -55,31 +55,19 @@ namespace ToolsToLive.AuthCore
 
             await _userStore.DeleteRefreshToken(user.UserName);
 
-            IAuthToken tokenInfo = CreateToken(user);
-            IAuthToken refreshTokenInfo = await CreateAndSaveRefreshToken(user);
+            IAuthToken token = await _tokenGenerator.GenerateToken(user);
+            IAuthToken refreshToken = await _tokenGenerator.GenerateRefreshToken(user);
+            await _userStore.SaveRefreshToken(refreshToken);
 
             await _userStore.UpdateLastActivity(user.Id);
 
-            return PrepareAuthResult(user, tokenInfo, refreshTokenInfo);
+            return PrepareAuthResult(user, token, refreshToken);
         }
 
         public async Task<AuthResult<TUser>> RefreshToken(string token, string refreshToken)
         {
             ClaimsPrincipal principal = _identityService.GetPrincipalFromToken(token);
             var username = principal.Identity.Name;
-
-            IAuthToken savedRefreshToken = await _userStore.GetRefreshToken(username); //retrieve the refresh token from data storage
-
-            if (savedRefreshToken == null
-                || savedRefreshToken.Token != refreshToken)
-            {
-                return new AuthResult<TUser>(AuthResultType.RefreshTokenWrong);
-            }
-
-            if (savedRefreshToken.ExpireDate < DateTime.UtcNow)
-            {
-                return new AuthResult<TUser>(AuthResultType.RefreshTokenExpired);
-            }
 
             TUser user = await _userStore.GetUserByUserName(username);
 
@@ -88,70 +76,47 @@ namespace ToolsToLive.AuthCore
                 return new AuthResult<TUser>(AuthResultType.UserNotFound);
             }
 
-            IAuthToken tokenInfo = CreateToken(user);
-            IAuthToken refreshTokenInfo = await UpdateAndSaveRefreshToken(savedRefreshToken);
+            IAuthToken tokenInfo = await _tokenGenerator.GenerateToken(user);
+            IAuthToken refreshTokenInfo = await _tokenGenerator.GenerateRefreshToken(user);
+            await _userStore.UpdateRefreshToken(username, refreshTokenInfo.Token);
 
             await _userStore.UpdateLastActivity(user.Id);
 
             return PrepareAuthResult(user, tokenInfo, refreshTokenInfo);
         }
 
-        private async Task<IAuthToken> CreateAndSaveRefreshToken(IUser user)
+        /// <summary>
+        /// Validate refresh token
+        /// </summary>
+        /// <returns>if token is valid - (true, null), otherwise (false, [reason])</returns>
+        private async Task<(bool, AuthResult<TUser>)> ValidaateRefreshToken(string userName, string refreshTokenToVerify)
         {
-            var now = DateTime.UtcNow;
-            var expires = now.Add(_options.Value.RefreshTokenLifeTime);
+            IAuthToken savedRefreshToken = await _userStore.GetRefreshToken(userName); //retrieve the refresh token from data storage
 
-            string refreshToken = _tokenGenerator.GenerateRefreshToken();
-            var authRefreshToken = new AuthToken
+            if (savedRefreshToken == null
+                || savedRefreshToken.Token != refreshTokenToVerify)
             {
-                Token = refreshToken,
-                IssueDate = now,
-                ExpireDate = expires,
-                UserName = user.UserName,
-            };
+                return (false, new AuthResult<TUser>(AuthResultType.RefreshTokenWrong));
+            }
 
-            await _userStore.SaveRefreshToken(authRefreshToken);
+            if (savedRefreshToken.ExpireDate < DateTime.UtcNow)
+            {
+                return (false, new AuthResult<TUser>(AuthResultType.RefreshTokenExpired));
+            }
 
-            return authRefreshToken;
+            return (true, null);
         }
 
-        private AuthResult<TUser> PrepareAuthResult(TUser user, IAuthToken tokenInfo, IAuthToken refreshTokenInfo)
+        private AuthResult<TUser> PrepareAuthResult(TUser user, IAuthToken token, IAuthToken refreshToken)
         {
             user.PasswordHash = null; //Do not show password hash to user
 
             return new AuthResult<TUser>(AuthResultType.Success)
             {
-                Token = tokenInfo,
-                RefreshToken = refreshTokenInfo,
+                Token = token,
+                RefreshToken = refreshToken,
                 User = user
             };
         }
-
-        private IAuthToken CreateToken(IUser user)
-        {
-            DateTime now = DateTime.UtcNow;
-            DateTime expires = now.Add(_options.Value.TokenLifetime);
-
-            ClaimsIdentity identity = _identityService.GetIdentity(user);
-            string token = _tokenGenerator.GenerateToken(identity, now, expires);
-
-            return new AuthToken
-            {
-                Token = token,
-                IssueDate = now,
-                ExpireDate = expires,
-                UserName = user.UserName,
-            };
-        }
-
-        private async Task<IAuthToken> UpdateAndSaveRefreshToken(IAuthToken savedRefreshToken)
-        {
-            string refreshToken = _tokenGenerator.GenerateRefreshToken();
-            await _userStore.UpdateRefreshToken(savedRefreshToken.UserName, refreshToken);
-
-            savedRefreshToken.Token = refreshToken;
-            return savedRefreshToken;
-        }
-
     }
 }
