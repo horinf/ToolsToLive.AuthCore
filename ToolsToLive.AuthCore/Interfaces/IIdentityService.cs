@@ -1,16 +1,22 @@
-﻿using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using ToolsToLive.AuthCore.Interfaces.Model;
 
 namespace ToolsToLive.AuthCore.Interfaces
 {
     public interface IIdentityService
     {
-        //ClaimsIdentity GetIdentity(IUser user);
+        /// <summary>
+        /// Generates new token.
+        /// </summary>
+        /// <param name="user">User.</param>
+        /// <returns>Token</returns>
+        Task<IAuthToken> GenerateToken(IUser user);
 
-        ClaimsPrincipal GetPrincipalFromToken(string token);
-
-        Task<IAuthToken> GenerateToken<TUser>(TUser user) where TUser : IUser;
+        /// <summary>
+        /// Generates refresh token.
+        /// </summary>
+        /// <param name="user">User.</param>
+        /// <returns>Refresh token.</returns>
         Task<IAuthToken> GenerateRefreshToken(IUser user);
     }
 }

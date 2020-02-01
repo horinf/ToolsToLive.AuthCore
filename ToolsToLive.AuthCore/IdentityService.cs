@@ -23,48 +23,16 @@ namespace ToolsToLive.AuthCore
             _options = options;
         }
 
-        public ClaimsPrincipal GetPrincipalFromToken(string token)
+        public Task<IAuthToken> GenerateToken(IUser user)
         {
-            var authOptions = _options.Value;
-
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = true,
-                ValidAudience = authOptions.Audience,
-                ValidateIssuer = true,
-                ValidIssuer = authOptions.Issuer,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = GetSecurityKey(),
-                ValidateLifetime = true,
-                RequireExpirationTime = true,
-                RequireSignedTokens = false,
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken securityToken;
-            ClaimsPrincipal principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
-
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-            {
-                throw new SecurityTokenException("Invalid token");
-            }
-
-            return principal;
-        }
-
-        public Task<IAuthToken> GenerateToken<TUser>(TUser user) where TUser : IUser
-        {
-            var authOptions = _options.Value;
-
             DateTime now = DateTime.UtcNow;
             DateTime expires = now.Add(_options.Value.TokenLifetime);
 
             ClaimsIdentity identity = GetIdentity(user);
 
             var jwt = new JwtSecurityToken(
-                issuer: authOptions.Issuer,
-                audience: authOptions.Audience,
+                issuer: _options.Value.Issuer,
+                audience: _options.Value.Audience,
                 claims: identity.Claims,
                 notBefore: now,
                 expires: expires,
@@ -141,18 +109,45 @@ namespace ToolsToLive.AuthCore
             return claims;
         }
 
-        private SymmetricSecurityKey GetSecurityKey()
-        {
-            return new SymmetricSecurityKey(Encoding.Unicode.GetBytes(_options.Value.Key));
-        }
-
         private SigningCredentials GetSigningCredentials()
         {
-            var sKey = GetSecurityKey();
+            var simmetricKey = new SymmetricSecurityKey(Encoding.Unicode.GetBytes(_options.Value.Key));
 
             return new SigningCredentials(
-                sKey,
+                simmetricKey,
                 SecurityAlgorithms.HmacSha256);
         }
+
+        //// not in use. Can be used to auth users.
+
+        //public ClaimsPrincipal GetPrincipalFromToken(string token)
+        //{
+        //    var authOptions = _options.Value;
+
+        //    var tokenValidationParameters = new TokenValidationParameters
+        //    {
+        //        ValidateAudience = true,
+        //        ValidAudience = authOptions.Audience,
+        //        ValidateIssuer = true,
+        //        ValidIssuer = authOptions.Issuer,
+        //        ValidateIssuerSigningKey = true,
+        //        IssuerSigningKey = GetSecurityKey(),
+        //        ValidateLifetime = true,
+        //        RequireExpirationTime = true,
+        //        RequireSignedTokens = false,
+        //    };
+
+        //    var tokenHandler = new JwtSecurityTokenHandler();
+        //    SecurityToken securityToken;
+        //    ClaimsPrincipal principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+
+        //    var jwtSecurityToken = securityToken as JwtSecurityToken;
+        //    if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+        //    {
+        //        throw new SecurityTokenException("Invalid token");
+        //    }
+
+        //    return principal;
+        //}
     }
 }

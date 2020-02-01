@@ -61,31 +61,22 @@ namespace ToolsToLive.AuthCore
             return PrepareAuthResult(user, token, refreshToken);
         }
 
-        public async Task<AuthResult<TUser>> RefreshToken(string token, string refreshToken)
+        public async Task<AuthResult<TUser>> RefreshToken(string userName, string currentRefreshToken)
         {
-            //verify token
-            ClaimsPrincipal principal;
-            try
+            if (userName is null)
             {
-                // try to resolve token to claims principal
-                principal = _identityService.GetPrincipalFromToken(token);
+                throw new ArgumentNullException(nameof(userName));
             }
-            catch (SecurityTokenException)
-            {
-                return new AuthResult<TUser>(AuthResultType.Fault);
-            }
-
-            var username = principal.Identity.Name;
 
             //verify refresh token
-            (bool, AuthResult<TUser>) verRefreshToken = await ValidaateRefreshToken(username, refreshToken);
+            (bool, AuthResult<TUser>) verRefreshToken = await ValidaateRefreshToken(userName, currentRefreshToken);
             if (!verRefreshToken.Item1)
             {
                 return verRefreshToken.Item2;
             }
 
             // retreive user from db
-            TUser user = await _userStore.GetUserByUserName(username);
+            TUser user = await _userStore.GetUserByUserName(userName);
 
             if (user == null)
             {
@@ -95,7 +86,7 @@ namespace ToolsToLive.AuthCore
             // create token and refresh token
             IAuthToken tokenInfo = await _identityService.GenerateToken(user);
             IAuthToken refreshTokenInfo = await _identityService.GenerateRefreshToken(user);
-            await _userStore.UpdateRefreshToken(username, refreshTokenInfo.Token);
+            await _userStore.UpdateRefreshToken(userName, refreshTokenInfo.Token);
 
             await _userStore.UpdateLastActivity(user.Id);
 
