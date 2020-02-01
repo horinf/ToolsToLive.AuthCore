@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ToolsToLive.AuthCore
+namespace ToolsToLive.AuthCore.Model
 {
     public class AuthOptions
     {

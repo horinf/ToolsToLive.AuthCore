@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Security.Claims;
 
-namespace ToolsToLive.AuthCore.Interfaces
+namespace ToolsToLive.AuthCore.Interfaces.Model
 {
     public interface IUser
     {

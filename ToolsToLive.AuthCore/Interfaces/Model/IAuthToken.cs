@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ToolsToLive.AuthCore.Interfaces
+namespace ToolsToLive.AuthCore.Interfaces.Model
 {
     public interface IAuthToken
     {

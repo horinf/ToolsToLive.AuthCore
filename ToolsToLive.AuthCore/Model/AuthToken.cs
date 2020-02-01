@@ -1,5 +1,5 @@
 ﻿using System;
-using ToolsToLive.AuthCore.Interfaces;
+using ToolsToLive.AuthCore.Interfaces.Model;
 
 namespace ToolsToLive.AuthCore.Model
 {

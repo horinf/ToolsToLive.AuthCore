@@ -1,4 +1,4 @@
-﻿namespace ToolsToLive.AuthCore.Interfaces
+﻿namespace ToolsToLive.AuthCore.Interfaces.Model
 {
     public interface IRole
     {

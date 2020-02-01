@@ -1,15 +1,15 @@
-﻿using ToolsToLive.AuthCore.Interfaces;
+﻿using ToolsToLive.AuthCore.Interfaces.Model;
 
 namespace ToolsToLive.AuthCore.Model
 {
     public class AuthResult<T> where T : IUser
     {
-        public AuthResult(AuthResultType type)
+        public AuthResult(AuthResultType result)
         {
-            AuthResultType = type;
+            Result = result;
         }
 
-        public AuthResultType AuthResultType { get; private set; }
+        public AuthResultType Result { get; private set; }
 
         public T User { get; set; }
 
@@ -17,6 +17,6 @@ namespace ToolsToLive.AuthCore.Model
 
         public IAuthToken RefreshToken { get; set; }
 
-        public bool IsSuccess => AuthResultType == AuthResultType.Success;
+        public bool IsSuccess => Result == AuthResultType.Success;
     }
 }

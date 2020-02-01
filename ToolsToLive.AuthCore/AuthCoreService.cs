@@ -3,26 +3,24 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ToolsToLive.AuthCore.Interfaces;
+using ToolsToLive.AuthCore.Interfaces.Model;
 using ToolsToLive.AuthCore.Model;
 
 namespace ToolsToLive.AuthCore
 {
-    public class AuthService<TUser> : IAuthService<TUser> where TUser : IUser
+    public class AuthCoreService<TUser> : IAuthCoreService<TUser> where TUser : IUser
     {
         private readonly IIdentityService _identityService;
-        private readonly ITokenGenerator _tokenGenerator;
         private readonly IPasswordHasher _passwordHasher;
-        private readonly IUserStore<TUser> _userStore;
+        private readonly IUserStorage<TUser> _userStore;
 
-        public AuthService(
+        public AuthCoreService(
             IIdentityService identityService,
-            ITokenGenerator tokenGenerator,
             IPasswordHasher passwordHasher,
-            IUserStore<TUser> userStore
+            IUserStorage<TUser> userStore
             )
         {
             _identityService = identityService;
-            _tokenGenerator = tokenGenerator;
             _passwordHasher = passwordHasher;
             _userStore = userStore;
         }
@@ -35,6 +33,7 @@ namespace ToolsToLive.AuthCore
 
         public async Task<AuthResult<TUser>> CheckPasswordAndGenerateToken(string userNameOrEmail, string password)
         {
+            // try to get user from db
             TUser user = await _userStore.GetUserByUserName(userNameOrEmail);
             if (user == null)
             {
@@ -45,17 +44,18 @@ namespace ToolsToLive.AuthCore
                 return new AuthResult<TUser>(AuthResultType.UserNotFound);
             }
 
+            // verify password
             if (!_passwordHasher.VerifyHashedPassword(user.PasswordHash, password))
             {
                 return new AuthResult<TUser>(AuthResultType.PasswordIsWrong);
             }
 
-            await _userStore.DeleteRefreshToken(user.UserName);
+            // User found, password correct
 
-            IAuthToken token = await _tokenGenerator.GenerateToken(user);
-            IAuthToken refreshToken = await _tokenGenerator.GenerateRefreshToken(user);
-            await _userStore.SaveRefreshToken(refreshToken);
+            IAuthToken token = await _identityService.GenerateToken(user);
+            IAuthToken refreshToken = await _identityService.GenerateRefreshToken(user);
 
+            await _userStore.SaveNewRefreshToken(refreshToken);
             await _userStore.UpdateLastActivity(user.Id);
 
             return PrepareAuthResult(user, token, refreshToken);
@@ -93,8 +93,8 @@ namespace ToolsToLive.AuthCore
             }
 
             // create token and refresh token
-            IAuthToken tokenInfo = await _tokenGenerator.GenerateToken(user);
-            IAuthToken refreshTokenInfo = await _tokenGenerator.GenerateRefreshToken(user);
+            IAuthToken tokenInfo = await _identityService.GenerateToken(user);
+            IAuthToken refreshTokenInfo = await _identityService.GenerateRefreshToken(user);
             await _userStore.UpdateRefreshToken(username, refreshTokenInfo.Token);
 
             await _userStore.UpdateLastActivity(user.Id);
