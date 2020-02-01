@@ -1,6 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Security.Claims;
+﻿using System;
 using System.Threading.Tasks;
 using ToolsToLive.AuthCore.Interfaces;
 using ToolsToLive.AuthCore.Interfaces.Model;
