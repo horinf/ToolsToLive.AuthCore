@@ -53,7 +53,7 @@ pack_alpha:
   image: mcr.microsoft.com/dotnet/core/sdk:3.1
   when: manual
   script:
-    - dotnet nuget push ToolsToLive.AuthCore/bin/$configuration/ToolsToLive.AuthCore.Ver.nupkg --source https://api.nuget.org/v3/index.json --api-key $nugetpush
+    - dotnet nuget push ToolsToLive.AuthCore/bin/$configuration/ToolsToLive.AuthCore.$Ver.nupkg --source https://api.nuget.org/v3/index.json --api-key $nugetpush
 
 publish_master:
   extends: .publish_definition
