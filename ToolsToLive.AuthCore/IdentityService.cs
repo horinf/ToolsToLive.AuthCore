@@ -25,6 +25,11 @@ namespace ToolsToLive.AuthCore
 
         public Task<IAuthToken> GenerateToken(IUser user)
         {
+            if(_options.Value.TokenLifetime == TimeSpan.Zero)
+            {
+                throw new Exception("Tonet lifetime is not set. Please set at least a few seconds if you use server to server aut, or at least a few minutes if you use client authentication");
+            }
+
             DateTime now = DateTime.UtcNow;
             DateTime expires = now.Add(_options.Value.TokenLifetime);
 
