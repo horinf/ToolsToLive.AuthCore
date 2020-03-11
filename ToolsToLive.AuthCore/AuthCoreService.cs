@@ -31,7 +31,7 @@ namespace ToolsToLive.AuthCore
 
         public async Task<AuthResult<TUser>> CheckPasswordAndGenerateToken(string userNameOrEmail, string password)
         {
-            // try to get user from db
+            // an attempt to get user from db (by user name or email)
             TUser user = await _userStore.GetUserByUserName(userNameOrEmail);
             if (user == null)
             {
@@ -42,7 +42,7 @@ namespace ToolsToLive.AuthCore
                 return new AuthResult<TUser>(AuthResultType.UserNotFound);
             }
 
-            // verify password
+            // password verification
             if (!_passwordHasher.VerifyHashedPassword(user.PasswordHash, password))
             {
                 return new AuthResult<TUser>(AuthResultType.PasswordIsWrong);
@@ -82,13 +82,13 @@ namespace ToolsToLive.AuthCore
             }
 
             // create token and refresh token
-            IAuthToken tokenInfo = await _identityService.GenerateToken(user);
-            IAuthToken refreshTokenInfo = await _identityService.GenerateRefreshToken(user);
-            await _userStore.UpdateRefreshToken(userName, refreshTokenInfo.Token);
+            IAuthToken token = await _identityService.GenerateToken(user);
+            IAuthToken refreshToken = await _identityService.GenerateRefreshToken(user);
 
+            await _userStore.UpdateRefreshToken(userName, refreshToken.Token);
             await _userStore.UpdateLastActivity(user.Id);
 
-            return PrepareAuthResult(user, tokenInfo, refreshTokenInfo);
+            return PrepareAuthResult(user, token, refreshToken);
         }
 
         /// <summary>

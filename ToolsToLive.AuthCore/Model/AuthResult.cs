@@ -9,8 +9,14 @@ namespace ToolsToLive.AuthCore.Model
             Result = result;
         }
 
+        /// <summary>
+        /// Indicates status of authentication (success, reason why fail, or just fault if something wrong)
+        /// </summary>
         public AuthResultType Result { get; private set; }
 
+        /// <summary>
+        /// User, always provided when auth is success
+        /// </summary>
         public T User { get; set; }
 
         public IAuthToken Token { get; set; }

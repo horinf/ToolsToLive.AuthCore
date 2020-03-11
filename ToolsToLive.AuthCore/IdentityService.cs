@@ -56,6 +56,7 @@ namespace ToolsToLive.AuthCore
 
             return Task.FromResult(token);
         }
+
         public Task<IAuthToken> GenerateRefreshToken(IUser user)
         {
             var randomNumber = new byte[32];

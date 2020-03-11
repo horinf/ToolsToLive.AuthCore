@@ -9,14 +9,14 @@ namespace ToolsToLive.AuthCore.Interfaces
         /// Gets user from db by user name.
         /// </summary>
         /// <param name="userName">User name.</param>
-        /// <returns>User.</returns>
+        /// <returns>User, or null if user does not exists.</returns>
         Task<TUser> GetUserByUserName(string userName);
 
         /// <summary>
         /// Gets user from db by user e-mail address (assuming that emails must be unique to each user).
         /// </summary>
         /// <param name="email">Email address.</param>
-        /// <returns>User.</returns>
+        /// <returns>User, or null if user does not exists.</returns>
         Task<TUser> GetUserByEmail(string email);
 
         /// <summary>
