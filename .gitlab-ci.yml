@@ -14,7 +14,7 @@ build:
     - dotnet publish ToolsToLive.AuthCore/ToolsToLive.AuthCore.csproj -c $configuration /p:Version=$version.$CI_PIPELINE_IID -o ToolsToLive.AuthCore/bin/$configuration/publish
   artifacts:
     expire_in: 1h
-    name: "horinf.sitemapper.$CI_PIPELINE_ID"
+    name: "ToolsToLive.AuthCore.$CI_PIPELINE_ID"
     paths:
       - ToolsToLive.AuthCore/bin/$configuration/publish
   except:
@@ -29,7 +29,7 @@ build:
     - dotnet pack -c $configuration /p:Version=$Ver
   artifacts:
     expire_in: 1h
-    name: "horinf.sitemapper.$CI_PIPELINE_ID"
+    name: "ToolsToLive.AuthCore.$CI_PIPELINE_ID"
     paths:
       - ToolsToLive.AuthCore/bin/$configuration/ToolsToLive.AuthCore.$Ver.nupkg
 
