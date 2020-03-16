@@ -23,8 +23,9 @@ namespace ToolsToLive.AuthCore.Interfaces
         /// Before call this method you should validate token (user must be authorized for creating new token).
         /// </summary>
         /// <param name="userName"></param>
+        /// <param name="sessionId"></param>
         /// <param name="refreshToken"></param>
         /// <returns>Auth result with token, refresh token and user.</returns>
-        Task<AuthResult<T>> RefreshToken(string userName, string refreshToken);
+        Task<AuthResult<T>> RefreshToken(string userName, string sessionId, string refreshToken);
     }
 }

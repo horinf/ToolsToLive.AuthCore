@@ -23,8 +23,9 @@ namespace ToolsToLive.AuthCore.Interfaces
         /// Gets refresh token from db by user name.
         /// </summary>
         /// <param name="userName">User name.</param>
+        /// <param name="sessionId">Session Id.</param>
         /// <returns>Auth token.</returns>
-        Task<IAuthToken> GetRefreshToken(string userName);
+        Task<IAuthToken> GetRefreshToken(string userName, string sessionId);
 
         /// <summary>
         /// Saves new refresh token to database (if already exists should be overwritten).
@@ -36,8 +37,9 @@ namespace ToolsToLive.AuthCore.Interfaces
         /// Updates refresh token that already exists.
         /// </summary>
         /// <param name="userName">User name.</param>
+        /// <param name="sessionId">Session Id.</param>
         /// <param name="refreshToken">Refresh token to store (only token, created date and other information should be left as is).</param>
-        Task UpdateRefreshToken(string userName, string refreshToken);
+        Task UpdateRefreshToken(string userName, string sessionId, string refreshToken);
 
         /// <summary>
         /// Updates user last activity (is being called when new token is generated (user logged in or refresh his token)).

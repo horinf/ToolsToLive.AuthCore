@@ -50,6 +50,8 @@ namespace ToolsToLive.AuthCore
 
             // User found, password correct
 
+            string sessionId = Guid.NewGuid().ToString();
+
             IAuthToken token = await _identityService.GenerateToken(user);
             IAuthToken refreshToken = await _identityService.GenerateRefreshToken(user);
 
@@ -59,7 +61,7 @@ namespace ToolsToLive.AuthCore
             return PrepareAuthResult(user, token, refreshToken);
         }
 
-        public async Task<AuthResult<TUser>> RefreshToken(string userName, string currentRefreshToken)
+        public async Task<AuthResult<TUser>> RefreshToken(string userName, string sessionId, string currentRefreshToken)
         {
             if (userName is null)
             {
@@ -67,7 +69,7 @@ namespace ToolsToLive.AuthCore
             }
 
             //verify refresh token
-            (bool, AuthResult<TUser>) verRefreshToken = await ValidaateRefreshToken(userName, currentRefreshToken);
+            (bool, AuthResult<TUser>) verRefreshToken = await ValidaateRefreshToken(userName, sessionId, currentRefreshToken);
             if (!verRefreshToken.Item1)
             {
                 return verRefreshToken.Item2;
@@ -85,7 +87,7 @@ namespace ToolsToLive.AuthCore
             IAuthToken token = await _identityService.GenerateToken(user);
             IAuthToken refreshToken = await _identityService.GenerateRefreshToken(user);
 
-            await _userStore.UpdateRefreshToken(userName, refreshToken.Token);
+            await _userStore.UpdateRefreshToken(userName, sessionId, refreshToken.Token);
             await _userStore.UpdateLastActivity(user.Id);
 
             return PrepareAuthResult(user, token, refreshToken);
@@ -95,9 +97,9 @@ namespace ToolsToLive.AuthCore
         /// Validate refresh token
         /// </summary>
         /// <returns>if token is valid - (true, null), otherwise (false, [reason])</returns>
-        private async Task<(bool, AuthResult<TUser>)> ValidaateRefreshToken(string userName, string refreshTokenToVerify)
+        private async Task<(bool, AuthResult<TUser>)> ValidaateRefreshToken(string userName, string sessionId, string refreshTokenToVerify)
         {
-            IAuthToken savedRefreshToken = await _userStore.GetRefreshToken(userName); //retrieve the refresh token from data storage
+            IAuthToken savedRefreshToken = await _userStore.GetRefreshToken(userName, sessionId); //retrieve the refresh token from data storage
 
             if (savedRefreshToken == null
                 || savedRefreshToken.Token != refreshTokenToVerify)

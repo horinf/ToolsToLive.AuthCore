@@ -23,7 +23,7 @@ namespace ToolsToLive.AuthCore
             _options = options;
         }
 
-        public Task<IAuthToken> GenerateToken(IUser user)
+        public Task<IAuthToken> GenerateToken(IUser user, string sessionId)
         {
             if(_options.Value.TokenLifetime == TimeSpan.Zero)
             {
@@ -57,7 +57,7 @@ namespace ToolsToLive.AuthCore
             return Task.FromResult(token);
         }
 
-        public Task<IAuthToken> GenerateRefreshToken(IUser user)
+        public Task<IAuthToken> GenerateRefreshToken(IUser user, string sessionId)
         {
             var randomNumber = new byte[32];
             string tokenString;

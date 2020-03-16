@@ -9,14 +9,16 @@ namespace ToolsToLive.AuthCore.Interfaces
         /// Generates new token.
         /// </summary>
         /// <param name="user">User.</param>
+        /// <param name="sessionId">Session Id.</param>
         /// <returns>Token</returns>
-        Task<IAuthToken> GenerateToken(IUser user);
+        Task<IAuthToken> GenerateToken(IUser user, string sessionId);
 
         /// <summary>
         /// Generates refresh token.
         /// </summary>
         /// <param name="user">User.</param>
+        /// <param name="sessionId">Session Id.</param>
         /// <returns>Refresh token.</returns>
-        Task<IAuthToken> GenerateRefreshToken(IUser user);
+        Task<IAuthToken> GenerateRefreshToken(IUser user, string sessionId);
     }
 }
