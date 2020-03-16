@@ -33,7 +33,7 @@ namespace ToolsToLive.AuthCore
             DateTime now = DateTime.UtcNow;
             DateTime expires = now.Add(_options.Value.TokenLifetime);
 
-            ClaimsIdentity identity = GetIdentity(user);
+            ClaimsIdentity identity = GetIdentity(user, sessionId);
 
             var jwt = new JwtSecurityToken(
                 issuer: _options.Value.Issuer,
@@ -49,6 +49,7 @@ namespace ToolsToLive.AuthCore
             IAuthToken token = new AuthToken
             {
                 Token = encodedJwt,
+                SessionId = sessionId,
                 IssueDate = now,
                 ExpireDate = expires,
                 UserName = user.UserName,
@@ -73,6 +74,7 @@ namespace ToolsToLive.AuthCore
             IAuthToken refreshToken = new AuthToken
             {
                 Token = tokenString,
+                SessionId = sessionId,
                 IssueDate = now,
                 ExpireDate = expires,
                 UserName = user.UserName,
@@ -81,9 +83,9 @@ namespace ToolsToLive.AuthCore
             return Task.FromResult(refreshToken);
         }
 
-        private ClaimsIdentity GetIdentity(IUser user)
+        private ClaimsIdentity GetIdentity(IUser user, string sessionId)
         {
-            List<Claim> claims = GetClaimsForUser(user);
+            List<Claim> claims = GetClaimsForUser(user, sessionId);
 
             ClaimsIdentity claimsIdentity = new ClaimsIdentity(
                 claims,
@@ -94,12 +96,13 @@ namespace ToolsToLive.AuthCore
             return claimsIdentity;
         }
 
-        private static List<Claim> GetClaimsForUser(IUser user)
+        private static List<Claim> GetClaimsForUser(IUser user, string sessionId)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserName),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim("SessionId", sessionId),
             };
 
             foreach (var item in user.Roles)

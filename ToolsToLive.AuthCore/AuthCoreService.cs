@@ -52,8 +52,8 @@ namespace ToolsToLive.AuthCore
 
             string sessionId = Guid.NewGuid().ToString();
 
-            IAuthToken token = await _identityService.GenerateToken(user);
-            IAuthToken refreshToken = await _identityService.GenerateRefreshToken(user);
+            IAuthToken token = await _identityService.GenerateToken(user, sessionId);
+            IAuthToken refreshToken = await _identityService.GenerateRefreshToken(user, sessionId);
 
             await _userStore.SaveNewRefreshToken(refreshToken);
             await _userStore.UpdateLastActivity(user.Id);
@@ -84,8 +84,8 @@ namespace ToolsToLive.AuthCore
             }
 
             // create token and refresh token
-            IAuthToken token = await _identityService.GenerateToken(user);
-            IAuthToken refreshToken = await _identityService.GenerateRefreshToken(user);
+            IAuthToken token = await _identityService.GenerateToken(user, sessionId);
+            IAuthToken refreshToken = await _identityService.GenerateRefreshToken(user, sessionId);
 
             await _userStore.UpdateRefreshToken(userName, sessionId, refreshToken.Token);
             await _userStore.UpdateLastActivity(user.Id);
