@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ToolsToLive.AuthCore.Interfaces;
 using ToolsToLive.AuthCore.Interfaces.Model;
@@ -29,7 +30,22 @@ namespace ToolsToLive.AuthCore
         //    return principal;
         //}
 
-        public async Task<AuthResult<TUser>> CheckPasswordAndGenerateToken(string userNameOrEmail, string password)
+        public async Task SignOut(string userName, string sessionId)
+        {
+            await _userStore.DeleteRefreshToken(userName, sessionId);
+        }
+
+        public async Task SignOutFromEverywhere(string userName)
+        {
+            IEnumerable<IAuthToken> rTokens = await _userStore.GetRefreshTokens(userName);
+            foreach (IAuthToken rToken in rTokens)
+            {
+                await _userStore.DeleteRefreshToken(rToken.UserName, rToken.SessionId);
+
+            }
+        }
+
+        public async Task<AuthResult<TUser>> SignIn(string userNameOrEmail, string password)
         {
             // an attempt to get user from db (by user name or email)
             TUser user = await _userStore.GetUserByUserName(userNameOrEmail);
@@ -48,7 +64,13 @@ namespace ToolsToLive.AuthCore
                 return new AuthResult<TUser>(AuthResultType.PasswordIsWrong);
             }
 
-            // User found, password correct
+            // check if user is confirmed
+            if (!user.IsConfirmed)
+            {
+                return new AuthResult<TUser>(AuthResultType.NotConfirmed);
+            }
+
+            // User found, password correct, user is confirmed
 
             string sessionId = Guid.NewGuid().ToString();
 
@@ -69,10 +91,10 @@ namespace ToolsToLive.AuthCore
             }
 
             //verify refresh token
-            (bool, AuthResult<TUser>) verRefreshToken = await ValidaateRefreshToken(userName, sessionId, currentRefreshToken);
-            if (!verRefreshToken.Item1)
+            bool verRefreshToken = await ValidaateRefreshToken(userName, sessionId, currentRefreshToken);
+            if (!verRefreshToken)
             {
-                return verRefreshToken.Item2;
+                return new AuthResult<TUser>(AuthResultType.RefreshTokenWrong);
             }
 
             // retreive user from db
@@ -97,22 +119,18 @@ namespace ToolsToLive.AuthCore
         /// Validate refresh token
         /// </summary>
         /// <returns>if token is valid - (true, null), otherwise (false, [reason])</returns>
-        private async Task<(bool, AuthResult<TUser>)> ValidaateRefreshToken(string userName, string sessionId, string refreshTokenToVerify)
+        private async Task<bool> ValidaateRefreshToken(string userName, string sessionId, string refreshTokenToVerify)
         {
             IAuthToken savedRefreshToken = await _userStore.GetRefreshToken(userName, sessionId); //retrieve the refresh token from data storage
 
             if (savedRefreshToken == null
-                || savedRefreshToken.Token != refreshTokenToVerify)
+                || savedRefreshToken.Token != refreshTokenToVerify
+                || savedRefreshToken.ExpireDate < DateTime.UtcNow)
             {
-                return (false, new AuthResult<TUser>(AuthResultType.RefreshTokenWrong));
+                return false;
             }
 
-            if (savedRefreshToken.ExpireDate < DateTime.UtcNow)
-            {
-                return (false, new AuthResult<TUser>(AuthResultType.RefreshTokenExpired));
-            }
-
-            return (true, null);
+            return true;
         }
 
         private AuthResult<TUser> PrepareAuthResult(TUser user, IAuthToken token, IAuthToken refreshToken)

@@ -11,12 +11,12 @@ namespace ToolsToLive.AuthCore.Interfaces
         //ClaimsPrincipal Auth(string token);
 
         /// <summary>
-        /// Validate password (hashes passed password and compares to password hash in database).
+        /// Validate password (hashes passed password and compares result to password hash in database).
         /// </summary>
         /// <param name="userNameOrEmail">User name or user email (if user not found by user name, auth service will try to find user by email (emails should be unique for each user)).</param>
         /// <param name="password">Password to validate (not hashed, plain password that user typed in login field).</param>
         /// <returns>Auth result with token, refresh token and user.</returns>
-        Task<AuthResult<T>> CheckPasswordAndGenerateToken(string userNameOrEmail, string password);
+        Task<AuthResult<T>> SignIn(string userNameOrEmail, string password);
 
         /// <summary>
         /// Validates refresh token (compares to refresh token in db) and creates new token.

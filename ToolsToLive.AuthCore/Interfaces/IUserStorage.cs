@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using ToolsToLive.AuthCore.Interfaces.Model;
 
 namespace ToolsToLive.AuthCore.Interfaces
@@ -28,6 +29,13 @@ namespace ToolsToLive.AuthCore.Interfaces
         Task<IAuthToken> GetRefreshToken(string userName, string sessionId);
 
         /// <summary>
+        /// Gets refresh tokens from db for user.
+        /// </summary>
+        /// <param name="userName">User name.</param>
+        /// <returns>List of refresh tokens.</returns>
+        Task<IEnumerable<IAuthToken>> GetRefreshTokens(string userName);
+
+        /// <summary>
         /// Saves new refresh token to database (if already exists should be overwritten).
         /// </summary>
         /// <param name="authToken">Auth token interface.</param>
@@ -40,6 +48,12 @@ namespace ToolsToLive.AuthCore.Interfaces
         /// <param name="sessionId">Session Id.</param>
         /// <param name="refreshToken">Refresh token to store (only token, created date and other information should be left as is).</param>
         Task UpdateRefreshToken(string userName, string sessionId, string refreshToken);
+
+        /// <summary>
+        /// Deletes refresh token from Db (e.g. when logout)
+        /// </summary>
+        /// <param name="userName"></param>
+        Task DeleteRefreshToken(string userName, string sessionId);
 
         /// <summary>
         /// Updates user last activity (is being called when new token is generated (user logged in or refresh his token)).

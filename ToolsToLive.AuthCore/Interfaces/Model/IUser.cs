@@ -21,6 +21,11 @@ namespace ToolsToLive.AuthCore.Interfaces.Model
         string PasswordHash { get; set; }
 
         /// <summary>
+        /// Indicates if user is confirmed (has verified his email, is added by admin, etc.)
+        /// </summary>
+        bool IsConfirmed { get; set; }
+
+        /// <summary>
         /// User's roles (will be added to token)
         /// </summary>
         List<IRole> Roles { get; }

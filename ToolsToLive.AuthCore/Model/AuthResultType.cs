@@ -5,7 +5,8 @@
         Fault,
         UserNotFound,
         PasswordIsWrong,
-        RefreshTokenExpired,
+        NotConfirmed,
+        //RefreshTokenExpired,
         RefreshTokenWrong,
         Success
     }
