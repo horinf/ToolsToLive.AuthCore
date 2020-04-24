@@ -27,7 +27,7 @@ namespace ToolsToLive.AuthCore
         {
             if(_options.Value.TokenLifetime == TimeSpan.Zero)
             {
-                throw new Exception("Tonet lifetime is not set. Please set at least a few seconds if you use server to server aut, or at least a few minutes if you use client authentication");
+                throw new Exception("Token lifetime is not set. Please set at least a few seconds if you use server to server auth, or at least a few minutes if you use client authentication");
             }
 
             DateTime now = DateTime.UtcNow;
