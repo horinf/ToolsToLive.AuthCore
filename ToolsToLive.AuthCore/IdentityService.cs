@@ -105,9 +105,12 @@ namespace ToolsToLive.AuthCore
                 new Claim("SessionId", sessionId),
             };
 
-            foreach (var item in user.Roles)
+            if (user.Roles != null)
             {
-                claims.Add(new Claim(ClaimTypes.Role, item.Id));
+                foreach (var item in user.Roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, item.Id));
+                }
             }
 
             if (user.Claims != null && user.Claims.Any())
