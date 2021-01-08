@@ -4,8 +4,8 @@
     {
         Fault,
         UserNotFound,
-        PasswordIsWrong,
-        NotConfirmed,
+        PasswordWrong,
+        UserNotConfirmed,
         //RefreshTokenExpired,
         RefreshTokenWrong,
         Success

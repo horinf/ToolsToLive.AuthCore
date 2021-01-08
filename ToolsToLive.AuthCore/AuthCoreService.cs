@@ -61,13 +61,13 @@ namespace ToolsToLive.AuthCore
             // password verification
             if (!_passwordHasher.VerifyHashedPassword(user.PasswordHash, password))
             {
-                return new AuthResult<TUser>(AuthResultType.PasswordIsWrong);
+                return new AuthResult<TUser>(AuthResultType.PasswordWrong);
             }
 
             // check if user is confirmed
             if (!user.IsConfirmed)
             {
-                return new AuthResult<TUser>(AuthResultType.NotConfirmed);
+                return new AuthResult<TUser>(AuthResultType.UserNotConfirmed);
             }
 
             // User found, password correct, user is confirmed
