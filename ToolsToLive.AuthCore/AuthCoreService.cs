@@ -1,104 +1,164 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using ToolsToLive.AuthCore.Interfaces;
+using ToolsToLive.AuthCore.Interfaces.Helpers;
+using ToolsToLive.AuthCore.Interfaces.IdentityServices;
 using ToolsToLive.AuthCore.Interfaces.Model;
+using ToolsToLive.AuthCore.Interfaces.Storage;
 using ToolsToLive.AuthCore.Model;
 
 namespace ToolsToLive.AuthCore
 {
     public class AuthCoreService<TUser> : IAuthCoreService<TUser> where TUser : IUser
     {
+        private readonly IUserStorageService<TUser> _userStore;
+        private readonly IRefreshTokenStorageService _refreshTokenStorageService;
         private readonly IIdentityService _identityService;
+        private readonly IOptions<AuthOptions> _options;
         private readonly IPasswordHasher _passwordHasher;
-        private readonly IUserStorage<TUser> _userStore;
+        private readonly IAuthCookiesHelper _authCookiesHelper;
+        private readonly IIdentityValidationService _identityValidationService;
 
         public AuthCoreService(
+            IUserStorageService<TUser> userStore,
+            IRefreshTokenStorageService refreshTokenStorageService,
             IIdentityService identityService,
+            IOptions<AuthOptions> options,
             IPasswordHasher passwordHasher,
-            IUserStorage<TUser> userStore
-            )
+            IAuthCookiesHelper authCookiesHelper,
+            IIdentityValidationService identityValidationService)
         {
-            _identityService = identityService;
-            _passwordHasher = passwordHasher;
             _userStore = userStore;
+            _refreshTokenStorageService = refreshTokenStorageService;
+            _identityService = identityService;
+            _options = options;
+            _passwordHasher = passwordHasher;
+            _authCookiesHelper = authCookiesHelper;
+            _identityValidationService = identityValidationService;
         }
 
-        //public ClaimsPrincipal Auth(string token)
-        //{
-        //    var principal = _identityService.GetPrincipalFromToken(token);
-        //    return principal;
-        //}
-
-        public async Task SignOut(string userName, string sessionId)
+        public ClaimsPrincipal GetPrincipalByToken(string token)
         {
-            await _userStore.DeleteRefreshToken(userName, sessionId);
+            var principal = _identityValidationService.GetPrincipalFromToken(token);
+            return principal;
         }
 
-        public async Task SignOutFromEverywhere(string userName)
+        public async Task<AuthResult<TUser>> SignIn(string userNameOrEmail, string password, string deviceId, IResponseCookies responseCookies)
         {
-            IEnumerable<IAuthToken> rTokens = await _userStore.GetRefreshTokens(userName);
-            foreach (IAuthToken rToken in rTokens)
+            if (string.IsNullOrWhiteSpace(deviceId))
             {
-                await _userStore.DeleteRefreshToken(rToken.UserName, rToken.SessionId);
-
+                throw new ArgumentNullException(nameof(deviceId));
             }
-        }
 
-        public async Task<AuthResult<TUser>> SignIn(string userNameOrEmail, string password)
-        {
             // an attempt to get user from db (by user name or email)
-            TUser user = await _userStore.GetUserByUserName(userNameOrEmail);
-            if (user == null)
-            {
-                user = await _userStore.GetUserByEmail(userNameOrEmail);
-            }
+            var user = await _userStore.GetUserByUserNameOrEmail(userNameOrEmail);
+
             if (user == null)
             {
                 return new AuthResult<TUser>(AuthResultType.UserNotFound);
             }
 
-            // password verification
-            if (!_passwordHasher.VerifyHashedPassword(user.PasswordHash, password))
+            if (user.LockoutEndDate.HasValue && user.LockoutEndDate > DateTime.Now)
             {
+                return new AuthResult<TUser>(AuthResultType.LockedOut);
+            }
+
+            // password verification
+            if (!_passwordHasher.VerifyPassword(user.PasswordHash, password))
+            {
+                user.AccessFailedCount++;
+                if (user.AccessFailedCount > _options.Value.MaxAccessFailedCount)
+                {
+                    user.LockoutEndDate = DateTime.Now.Add(_options.Value.LockoutPeriod);
+                }
+                await _userStore.UpdateLockoutData(user.Id, user.AccessFailedCount, user.LockoutEndDate);
+
                 return new AuthResult<TUser>(AuthResultType.PasswordWrong);
             }
 
-            // check if user is confirmed
-            if (!user.IsConfirmed)
+            if (user.AccessFailedCount > 0)
             {
-                return new AuthResult<TUser>(AuthResultType.UserNotConfirmed);
+                await _userStore.UpdateLockoutData(user.Id, 0, null);
             }
 
-            // User found, password correct, user is confirmed
+            // User found, password correct
+            return await SignIn(user, deviceId, responseCookies);
+        }
 
-            string sessionId = Guid.NewGuid().ToString();
+        public async Task<AuthResult<TUser>> SignIn(string userId, string deviceId, IResponseCookies responseCookies)
+        {
+            // retreive user from db
+            var user = await _userStore.GetUserById(userId);
 
-            IAuthToken token = await _identityService.GenerateToken(user, sessionId);
-            IAuthToken refreshToken = await _identityService.GenerateRefreshToken(user, sessionId);
+            if (user == null)
+            {
+                return new AuthResult<TUser>(AuthResultType.UserNotFound);
+            }
 
-            await _userStore.SaveNewRefreshToken(refreshToken);
+            return await SignIn(user, deviceId, responseCookies);
+        }
+
+        private async Task<AuthResult<TUser>> SignIn(TUser user, string deviceId, IResponseCookies responseCookies)
+        {
+            if (string.IsNullOrWhiteSpace(deviceId))
+            {
+                throw new ArgumentNullException(nameof(deviceId));
+            }
+
+            var token = _identityService.GenerateAuthToken(user);
+            var refreshToken = _identityService.GenerateRefreshToken(user);
+
+            await _refreshTokenStorageService.SaveNewRefreshToken(refreshToken, deviceId);
             await _userStore.UpdateLastActivity(user.Id);
+
+            // Mobile apps can't use cookies, but they can store device id by themselves.
+            _authCookiesHelper.SetDeviceIdCookie(responseCookies, deviceId, refreshToken.ExpireDate);
+
+            var cookieToken = _identityService.GenerateAuthTokenForCookie(user);
+            _authCookiesHelper.SetAuthCookie(responseCookies, cookieToken.Token, cookieToken.ExpireDate);
 
             return PrepareAuthResult(user, token, refreshToken);
         }
 
-        public async Task<AuthResult<TUser>> RefreshToken(string userName, string sessionId, string currentRefreshToken)
+        public async Task SignOut(string userId, string deviceId)
         {
-            if (userName is null)
+            if (string.IsNullOrWhiteSpace(deviceId))
             {
-                throw new ArgumentNullException(nameof(userName));
+                throw new ArgumentNullException(nameof(deviceId));
+            }
+
+            await _refreshTokenStorageService.DeleteRefreshToken(userId, deviceId);
+        }
+
+        public async Task SignOutFromEverywhere(string userId)
+        {
+            await _refreshTokenStorageService.DeleteRefreshTokens(userId);
+        }
+
+        public async Task<AuthResult<TUser>> RefreshToken(string userId, string deviceId, string providedRefreshToken, IResponseCookies responseCookies)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentNullException(nameof(userId));
+            }
+
+            if (string.IsNullOrWhiteSpace(deviceId))
+            {
+                return new AuthResult<TUser>(AuthResultType.RefreshTokenWrong);
             }
 
             //verify refresh token
-            bool verRefreshToken = await ValidaateRefreshToken(userName, sessionId, currentRefreshToken);
+            var verRefreshToken = await VerifyRefreshToken(userId, deviceId, providedRefreshToken);
             if (!verRefreshToken)
             {
                 return new AuthResult<TUser>(AuthResultType.RefreshTokenWrong);
             }
 
             // retreive user from db
-            TUser user = await _userStore.GetUserByUserName(userName);
+            var user = await _userStore.GetUserById(userId);
 
             if (user == null)
             {
@@ -106,11 +166,17 @@ namespace ToolsToLive.AuthCore
             }
 
             // create token and refresh token
-            IAuthToken token = await _identityService.GenerateToken(user, sessionId);
-            IAuthToken refreshToken = await _identityService.GenerateRefreshToken(user, sessionId);
+            var token = _identityService.GenerateAuthToken(user);
+            var refreshToken = _identityService.GenerateRefreshToken(user);
 
-            await _userStore.UpdateRefreshToken(userName, sessionId, refreshToken.Token);
+            await _refreshTokenStorageService.UpdateRefreshToken(userId, deviceId, refreshToken);
             await _userStore.UpdateLastActivity(user.Id);
+
+            // Mobile apps can't use cookies, but they can store device id by themselves.
+            _authCookiesHelper.SetDeviceIdCookie(responseCookies, deviceId, refreshToken.ExpireDate);
+
+            var cookieToken = _identityService.GenerateAuthTokenForCookie(user);
+            _authCookiesHelper.SetAuthCookie(responseCookies, cookieToken.Token, cookieToken.ExpireDate);
 
             return PrepareAuthResult(user, token, refreshToken);
         }
@@ -118,24 +184,35 @@ namespace ToolsToLive.AuthCore
         /// <summary>
         /// Validate refresh token
         /// </summary>
-        /// <returns>if token is valid - (true, null), otherwise (false, [reason])</returns>
-        private async Task<bool> ValidaateRefreshToken(string userName, string sessionId, string refreshTokenToVerify)
+        private async Task<bool> VerifyRefreshToken(string userId, string deviceId, string refreshTokenToVerify)
         {
-            IAuthToken savedRefreshToken = await _userStore.GetRefreshToken(userName, sessionId); //retrieve the refresh token from data storage
+            var savedRefreshToken = await _refreshTokenStorageService.GetRefreshToken(userId, deviceId); //retrieve the refresh token from data storage
 
-            if (savedRefreshToken == null
-                || savedRefreshToken.Token != refreshTokenToVerify
-                || savedRefreshToken.ExpireDate < DateTime.UtcNow)
+            if (savedRefreshToken != null &&
+                savedRefreshToken.ExpireDate > DateTime.Now)
             {
-                return false;
+                if (savedRefreshToken.Token == refreshTokenToVerify)
+                {
+                    return true;
+                }
+                else
+                {
+                    // Soft grace period - previous token still valid for a few seconds
+                    var nowDiff = DateTime.Now.AddSeconds(-10);
+                    if (savedRefreshToken.PreviousToken == refreshTokenToVerify &&
+                        savedRefreshToken.IssueDate > nowDiff)
+                    {
+                        return true;
+                    }
+                }
             }
 
-            return true;
+            return false;
         }
 
         private AuthResult<TUser> PrepareAuthResult(TUser user, IAuthToken token, IAuthToken refreshToken)
         {
-            user.PasswordHash = null; //Do not show password hash to user
+            //user.PasswordHash = null; //Do not show password hash to user (it should have attribute JsonIgnore)
 
             return new AuthResult<TUser>(AuthResultType.Success)
             {

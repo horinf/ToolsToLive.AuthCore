@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Microsoft.AspNetCore.Http;
 
 namespace ToolsToLive.AuthCore.Model
 {
@@ -30,5 +31,32 @@ namespace ToolsToLive.AuthCore.Model
         /// Refresh token lifetime.
         /// </summary>
         public TimeSpan RefreshTokenLifeTime { get; set; }
+
+        public int MaxAccessFailedCount { get; set; }
+
+        public TimeSpan LockoutPeriod { get; set; }
+
+        // Cookies
+
+        public string AuthCookieName { get; set; }
+
+        public string DeviceIdCookieName { get; set; }
+
+        public string CookieDomain { get; set; }
+
+        public string CookiePath { get; set; }
+
+        public bool CookieSecure { get; set; }
+
+        public SameSiteMode CookieSameSiteMode { get; set; }
+
+
+        //public TimeSpan EmailConfirmCodeLifeTime { get; set; }
+
+        //public TimeSpan ChangePasswordCodeLifeTime { get; set; }
+
+        //public string OauthRedirectUrl { get; set; }
+
+        //public string ExtraSalt { get; set; }
     }
 }

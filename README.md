@@ -1,2 +1,2 @@
 # ToolsToLive.AuthCore
-Helper to make auth app
+Service to authenticate an app

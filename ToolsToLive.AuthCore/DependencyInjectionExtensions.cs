@@ -1,7 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ToolsToLive.AuthCore.Helpers;
+using ToolsToLive.AuthCore.IdentityServices;
 using ToolsToLive.AuthCore.Interfaces;
+using ToolsToLive.AuthCore.Interfaces.Helpers;
+using ToolsToLive.AuthCore.Interfaces.IdentityServices;
 using ToolsToLive.AuthCore.Interfaces.Model;
+using ToolsToLive.AuthCore.Interfaces.Storage;
 using ToolsToLive.AuthCore.Model;
 
 namespace ToolsToLive.AuthCore
@@ -17,14 +22,26 @@ namespace ToolsToLive.AuthCore
         /// <param name="services">Service collection.</param>
         /// <param name="configurationSection">Configuration section that should match to <see cref="AuthOptions"/> class.</param>
         /// <returns></returns>
-        public static IServiceCollection AddAuthCore<TUser, TUserStorage>(this IServiceCollection services, IConfigurationSection configurationSection) where TUser : IUser where TUserStorage : class, IUserStorage<TUser>
+        public static IServiceCollection AddAuthCore<TUser, TUserStorageService, TRefreshTokenStorageService>(this IServiceCollection services, IConfigurationSection configurationSection)
+            where TUser : IUser
+            where TUserStorageService : class, IUserStorageService<TUser>
+            where TRefreshTokenStorageService : class, IRefreshTokenStorageService
         {
             services.Configure<AuthOptions>(configurationSection);
 
+            services.AddSingleton<ISigningCredentialsProvider, SigningCredentialsProvider>();
+            services.AddSingleton<IIdentityValidationService, IdentityValidationService>();
+
             services.AddSingleton<IPasswordHasher, PasswordHasher>();
-            services.AddScoped<IIdentityService, IdentityService>();
+            services.AddSingleton<IIdentityProvider, IdentityProvider>();
+            services.AddSingleton<IIdentityService, IdentityService>();
+            services.AddSingleton<ICodeGenerator, CodeGenerator>();
+
             services.AddScoped<IAuthCoreService<TUser>, AuthCoreService<TUser>>();
-            services.AddScoped<IUserStorage<TUser>, TUserStorage>();
+            services.AddScoped<IUserStorageService<TUser>, TUserStorageService>();
+            services.AddScoped<IRefreshTokenStorageService, TRefreshTokenStorageService>();
+
+            services.AddScoped<IAuthCookiesHelper, AuthCookiesHelper>();
 
             return services;
         }

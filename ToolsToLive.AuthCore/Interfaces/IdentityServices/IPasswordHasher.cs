@@ -1,4 +1,4 @@
-﻿namespace ToolsToLive.AuthCore.Interfaces
+namespace ToolsToLive.AuthCore.Interfaces.IdentityServices
 {
     /// <summary>
     /// Service to hash password and check if password is correct (does it match to its hash)
@@ -6,18 +6,16 @@
     public interface IPasswordHasher
     {
         /// <summary>
-        /// Hash password
+        /// Hashes password. It is a good idea to add salt to password.
         /// </summary>
-        /// <param name="password">Password</param>
         /// <returns>Hash of password</returns>
         string HashPassword(string password);
 
         /// <summary>
         /// Check if password is correct (does it match to its hash)
+        /// If you added salt when setting a password, do not forget to add it to the password provided.
         /// </summary>
-        /// <param name="hashedPassword">Hash of password</param>
-        /// <param name="providedPassword">Plain (not hashed) password</param>
         /// <returns>True if password matchs to hash</returns>
-        bool VerifyHashedPassword(string hashedPassword, string providedPassword);
+        bool VerifyPassword(string hashedPassword, string providedPassword);
     }
 }
