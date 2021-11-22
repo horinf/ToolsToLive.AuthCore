@@ -69,7 +69,7 @@ publish-back_master:
     Ver: $version
   
 publish-back_alpha:
-  extends: .publish_definition
+  extends: .publish-back_definition
   dependencies:
     - build-back_alpha
   variables:
