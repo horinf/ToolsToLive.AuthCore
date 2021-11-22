@@ -5,8 +5,8 @@ stages:
   - build
   - publish
 
-  # build nuget
-.build-back_definition:
+# build nuget
+.build_nuget_definition:
   stage: build
   image: mcr.microsoft.com/dotnet/sdk:5.0
   script:
@@ -17,24 +17,24 @@ stages:
     paths:
       - backend/ToolsToLive.AuthCore/bin/Release/ToolsToLive.AuthCore.$Ver.nupkg
 
-build-back_master:
-  extends: .build-back_definition
+build_nuget_master:
+  extends: .build_nuget_definition
   variables:
     Ver: $version
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: on_success
 
-build-back_alpha:
-  extends: .build-back_definition
+build_nuget_alpha:
+  extends: .build_nuget_definition
   variables:
     Ver: $version-alpha.$CI_PIPELINE_IID
   rules:
     - if: '$CI_COMMIT_BRANCH != "master"'
       when: on_success
 
-  # build npm
-build-front:
+# build npm
+build_npm:
   stage: build
   image: node:14.15-alpine
   script:
@@ -50,16 +50,16 @@ build-front:
 
 
 # publish nuget package
-.publish-back_definition:
+.publish_nuget_definition:
   stage: publish
   image: mcr.microsoft.com/dotnet/sdk:5.0
   script:
     - dotnet nuget push backend/ToolsToLive.AuthCore/bin/Release/ToolsToLive.AuthCore.$Ver.nupkg --source https://api.nuget.org/v3/index.json --api-key $nugetpush
 
-publish-back_master:
-  extends: .publish-back_definition
+publish_nuget_master:
+  extends: .publish_nuget_definition
   dependencies:
-    - build-back_master
+    - build_nuget_master
   variables:
     Ver: $version
   rules:
@@ -68,10 +68,10 @@ publish-back_master:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: manual
   
-publish-back_alpha:
-  extends: .publish-back_definition
+publish_nuget_alpha:
+  extends: .publish_nuget_definition
   dependencies:
-    - build-back_alpha
+    - build_nuget_alpha
   variables:
     Ver: $version-alpha.$CI_PIPELINE_IID
   rules:
@@ -81,17 +81,17 @@ publish-back_alpha:
       when: manual
 
 # publish npm package
-.publish-front:
+.publish_npm:
   stage: publish
   image: node:14.15-alpine
   dependencies:
-    - build-front
+    - build_npm
   script:
     - npm config set //registry.npmjs.org/:_authToken ${npmpublish}
     - cd frontend/auth-core
     - npm publish dist/auth-core --access public
   rules:
-    - if: '$CI_COMMIT_BRANCH != "alpha" && $CI_COMMIT_BRANCH != "master"'
+    - if: '$CI_COMMIT_BRANCH != "alpha"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "alpha" || $CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "alpha"'
       when: manual
