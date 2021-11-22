@@ -1,74 +1,92 @@
 variables:
-  projectName: ToolsToLive.AuthCore
   version: 3.0.0
 
 stages:
   - build
-  - pack
   - publish
 
-build:
+  # build nuget
+.build-back_definition:
   stage: build
   image: mcr.microsoft.com/dotnet/sdk:5.0
   script:
-    - dotnet publish $projectName/$projectName.csproj -c Release /p:Version=$version.$CI_PIPELINE_IID -r win-x64 -o $projectName/bin/Release/publish
-
+    - dotnet pack -c Release /p:Version=$Ver -r win-x64
   artifacts:
     expire_in: 1h
-    name: "$projectName.$CI_PIPELINE_ID"
+    name: "ToolsToLive.AuthCore.$CI_PIPELINE_ID"
     paths:
-      - $projectName/bin/Release/publish
+      - backend/ToolsToLive.AuthCore/bin/Release/ToolsToLive.AuthCore.$Ver.nupkg
 
-.pack_definition:
-  stage: pack
-  image: mcr.microsoft.com/dotnet/sdk:5.0
-  script:
-    - dotnet pack -c Release /p:Version=$Ver
-  artifacts:
-    expire_in: 1h
-    name: "$projectName.$CI_PIPELINE_ID"
-    paths:
-      - $projectName/bin/Release/$projectName.$Ver.nupkg
-
-pack_master:
-  extends: .pack_definition
+build-back_master:
+  extends: .build-back_definition
   variables:
     Ver: $version
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: on_success
 
-pack_alpha:
-  extends: .pack_definition
+build-back_alpha:
+  extends: .build-back_definition
   variables:
     Ver: $version-alpha.$CI_PIPELINE_IID
   rules:
     - if: '$CI_COMMIT_BRANCH == "alpha"'
       when: on_success
 
-# publish (send to nuget)
-.publish_definition:
+  # build npm
+build-front:
+  stage: build
+  image: node:14.15-alpine
+  script:
+    - cd frontend/auth-core
+    - npm ci
+    - ng build auth-core --prod
+  artifacts:
+    expire_in: 1h
+    name: auth-core.$CI_PIPELINE_ID"
+    paths:
+      - frontendauth-core/dist/auth-core
+    when: on_success
+
+
+# publish nuget package
+.publish-back_definition:
   stage: publish
   image: mcr.microsoft.com/dotnet/sdk:5.0
   script:
-    - dotnet nuget push $projectName/bin/Release/$projectName.$Ver.nupkg --source https://api.nuget.org/v3/index.json --api-key $nugetpush
+    - dotnet nuget push backend/ToolsToLive.AuthCore/bin/Release/ToolsToLive.AuthCore.$Ver.nupkg --source https://api.nuget.org/v3/index.json --api-key $nugetpush
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "alpha" && $CI_COMMIT_BRANCH != "master"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "alpha" || $CI_COMMIT_BRANCH == "master"'
+      when: manual
 
-publish_master:
-  extends: .publish_definition
+publish-back_master:
+  extends: .publish-back_definition
   dependencies:
-    - pack_master
+    - build-back_master
   variables:
     Ver: $version
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-      when: on_success
   
-publish_alpha:
+publish-back_alpha:
   extends: .publish_definition
   dependencies:
-    - pack_alpha
+    - build-back_alpha
   variables:
     Ver: $version-alpha.$CI_PIPELINE_IID
+
+# publish npm package
+.publish-front:
+  stage: publish
+  image: node:14.15-alpine
+  dependencies:
+    - build-front
+  script:
+    - npm config set //registry.npmjs.org/:_authToken ${npmpublish}
+    - cd frontend/auth-core
+    - npm publish dist/auth-core --access public
   rules:
-    - if: '$CI_COMMIT_BRANCH == "alpha"'
-      when: on_success
+    - if: '$CI_COMMIT_BRANCH != "alpha" && $CI_COMMIT_BRANCH != "master"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "alpha" || $CI_COMMIT_BRANCH == "master"'
+      when: manual

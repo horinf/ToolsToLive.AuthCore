@@ -1,0 +1,39 @@
+import { ModuleWithProviders, NgModule } from '@angular/core';
+import { AuthService } from './services/auth.service';
+import { AccessTokenStorage } from './services/internal/storage/access-token-storage.service';
+import { DeviceIdService } from './services/internal/device-id.service';
+import { AuthApiService } from './services/internal/auth-api.service';
+import { TokenRefreshService } from './services/internal/token-refresh.service';
+import { RefreshTokenStorage } from './services/internal/storage/refresh-token-storage.service';
+import { SignInService } from './services/internal/sign-in.service';
+import { AuthDataService } from './services/internal/auth-data.service';
+import { LocalStorageService } from './services/internal/storage/local-storage.service';
+import { CookieStorageService } from './services/internal/storage/cookie-storage.service';
+import { CryptoService } from './services/internal/storage/crypto.service';
+import { AccessService } from './services/access.service';
+
+@NgModule({
+  imports: [
+  ]
+})
+export class AuthModule {
+  static forRoot(): ModuleWithProviders<AuthModule> {
+    return {
+      ngModule: AuthModule,
+      providers: [
+        AuthService,
+        AccessService,
+        TokenRefreshService,
+        CryptoService,
+        LocalStorageService,
+        CookieStorageService,
+        AccessTokenStorage,
+        RefreshTokenStorage,
+        DeviceIdService,
+        AuthApiService,
+        SignInService,
+        AuthDataService,
+      ],
+    };
+  }
+}
