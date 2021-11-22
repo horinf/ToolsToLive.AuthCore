@@ -10,7 +10,7 @@ stages:
   stage: build
   image: mcr.microsoft.com/dotnet/sdk:5.0
   script:
-    - dotnet pack -c Release /p:Version=$Ver -r win-x64
+    - dotnet pack backend/ToolsToLive.AuthCore/ToolsToLive.AuthCore.csproj -c Release /p:Version=$Ver
   artifacts:
     expire_in: 1h
     name: "ToolsToLive.AuthCore.$CI_PIPELINE_ID"
@@ -45,7 +45,7 @@ build-front:
     expire_in: 1h
     name: auth-core.$CI_PIPELINE_ID"
     paths:
-      - frontendauth-core/dist/auth-core
+      - frontend/auth-core/dist/auth-core
     when: on_success
 
 
