@@ -81,7 +81,7 @@ publish_nuget_alpha:
       when: manual
 
 # publish npm package
-.publish_npm:
+publish_npm:
   stage: publish
   image: node:14.15-alpine
   dependencies:
