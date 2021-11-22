@@ -55,11 +55,6 @@ build-front:
   image: mcr.microsoft.com/dotnet/sdk:5.0
   script:
     - dotnet nuget push backend/ToolsToLive.AuthCore/bin/Release/ToolsToLive.AuthCore.$Ver.nupkg --source https://api.nuget.org/v3/index.json --api-key $nugetpush
-  rules:
-    - if: '$CI_COMMIT_BRANCH != "alpha" && $CI_COMMIT_BRANCH != "master"'
-      when: never
-    - if: '$CI_COMMIT_BRANCH == "alpha" || $CI_COMMIT_BRANCH == "master"'
-      when: manual
 
 publish-back_master:
   extends: .publish-back_definition
@@ -67,6 +62,11 @@ publish-back_master:
     - build-back_master
   variables:
     Ver: $version
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "master"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: manual
   
 publish-back_alpha:
   extends: .publish-back_definition
@@ -74,6 +74,11 @@ publish-back_alpha:
     - build-back_alpha
   variables:
     Ver: $version-alpha.$CI_PIPELINE_IID
+  rules:
+    - if: '$CI_COMMIT_BRANCH != "alpha"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "alpha"'
+      when: manual
 
 # publish npm package
 .publish-front:
