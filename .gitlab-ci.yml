@@ -30,7 +30,7 @@ build-back_alpha:
   variables:
     Ver: $version-alpha.$CI_PIPELINE_IID
   rules:
-    - if: '$CI_COMMIT_BRANCH == "alpha"'
+    - if: '$CI_COMMIT_BRANCH != "master"'
       when: on_success
 
   # build npm
@@ -40,7 +40,7 @@ build-front:
   script:
     - cd frontend/auth-core
     - npm ci
-    - ng build auth-core --prod
+    - npm run lib:build
   artifacts:
     expire_in: 1h
     name: auth-core.$CI_PIPELINE_ID"
