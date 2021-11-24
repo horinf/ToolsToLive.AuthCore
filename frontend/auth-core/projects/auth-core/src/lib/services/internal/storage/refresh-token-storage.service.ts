@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
-import { AUTH_CORE_SETTINGS_TOKEN, AuthCoreSettings } from 'projects/auth-core/src/public-api';
+import { AuthCoreSettings, AUTH_CORE_SETTINGS_TOKEN } from '../../../model/auth-core-settings';
 import { AuthToken } from '../../../model/AuthToken';
 import { CookieStorageService } from './cookie-storage.service';
 
