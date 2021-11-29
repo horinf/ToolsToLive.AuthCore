@@ -69,7 +69,7 @@ namespace ToolsToLive.AuthCore.IdentityServices
                 throw new ArgumentOutOfRangeException(nameof(tokenLifeTime), "Token lifetime is not set. Please set at least a few seconds if you use ServerToServer auth, or at least a few minutes if you use client authentication");
             }
 
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var expires = now.Add(tokenLifeTime);
 
             var jwt = new JwtSecurityToken(
@@ -89,7 +89,7 @@ namespace ToolsToLive.AuthCore.IdentityServices
         {
             var tokenString = _tokenGenerator.GenerateCode();
 
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var expires = now.Add(_authOptions.Value.RefreshTokenLifeTime);
 
             IAuthToken refreshToken = new AuthToken

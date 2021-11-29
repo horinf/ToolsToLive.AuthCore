@@ -61,7 +61,7 @@ namespace ToolsToLive.AuthCore
                 return new AuthResult<TUser>(AuthResultType.UserNotFound);
             }
 
-            if (user.LockoutEndDate.HasValue && user.LockoutEndDate > DateTime.Now)
+            if (user.LockoutEndDate.HasValue && user.LockoutEndDate > DateTime.UtcNow)
             {
                 return new AuthResult<TUser>(AuthResultType.LockedOut);
             }
@@ -72,7 +72,7 @@ namespace ToolsToLive.AuthCore
                 user.AccessFailedCount++;
                 if (user.AccessFailedCount > _options.Value.MaxAccessFailedCount)
                 {
-                    user.LockoutEndDate = DateTime.Now.Add(_options.Value.LockoutPeriod);
+                    user.LockoutEndDate = DateTime.UtcNow.Add(_options.Value.LockoutPeriod);
                 }
                 await _userStore.UpdateLockoutData(user.Id, user.AccessFailedCount, user.LockoutEndDate);
 
@@ -189,7 +189,7 @@ namespace ToolsToLive.AuthCore
             var savedRefreshToken = await _refreshTokenStorageService.GetRefreshToken(userId, deviceId); //retrieve the refresh token from data storage
 
             if (savedRefreshToken != null &&
-                savedRefreshToken.ExpireDate > DateTime.Now)
+                savedRefreshToken.ExpireDate > DateTime.UtcNow)
             {
                 if (savedRefreshToken.Token == refreshTokenToVerify)
                 {
@@ -198,7 +198,7 @@ namespace ToolsToLive.AuthCore
                 else
                 {
                     // Soft grace period - previous token still valid for a few seconds
-                    var nowDiff = DateTime.Now.AddSeconds(-10);
+                    var nowDiff = DateTime.UtcNow.AddSeconds(-10);
                     if (savedRefreshToken.PreviousToken == refreshTokenToVerify &&
                         savedRefreshToken.IssueDate > nowDiff)
                     {

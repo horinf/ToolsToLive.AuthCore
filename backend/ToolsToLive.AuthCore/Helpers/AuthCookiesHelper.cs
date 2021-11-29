@@ -40,7 +40,7 @@ namespace ToolsToLive.AuthCore.Helpers
                 Secure = _authOptions.Value.CookieSecure,
                 SameSite = _authOptions.Value.CookieSameSiteMode,
                 Expires = expire,
-                MaxAge = expire - DateTime.Now,
+                MaxAge = expire - DateTime.UtcNow,
             });
         }
 
@@ -53,7 +53,7 @@ namespace ToolsToLive.AuthCore.Helpers
                 HttpOnly = true,
                 Secure = _authOptions.Value.CookieSecure,
                 SameSite = _authOptions.Value.CookieSameSiteMode,
-                Expires = DateTime.Now.AddYears(-2),
+                Expires = DateTime.UtcNow.AddYears(-2),
                 MaxAge = TimeSpan.Zero,
             });
         }
@@ -90,7 +90,7 @@ namespace ToolsToLive.AuthCore.Helpers
                 Secure = _authOptions.Value.CookieSecure,
                 SameSite = _authOptions.Value.CookieSameSiteMode,
                 Expires = expire,
-                MaxAge = expire - DateTime.Now,
+                MaxAge = expire - DateTime.UtcNow,
             });
         }
 
@@ -103,7 +103,7 @@ namespace ToolsToLive.AuthCore.Helpers
                 HttpOnly = true,
                 Secure = _authOptions.Value.CookieSecure,
                 SameSite = _authOptions.Value.CookieSameSiteMode,
-                Expires = DateTime.Now.AddYears(-2),
+                Expires = DateTime.UtcNow.AddYears(-2),
                 MaxAge = TimeSpan.Zero,
             });
         }
