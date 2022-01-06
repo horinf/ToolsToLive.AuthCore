@@ -20,7 +20,7 @@ namespace ToolsToLive.AuthCore.Interfaces.IdentityServices
         /// <returns></returns>
         IAuthToken GenerateAuthTokenForCookie(IUser user);
 
-        (string, DateTime, DateTime) GenerateJwtToken(IEnumerable<Claim> claims, TimeSpan tokenLifeTime);
+        //(string, DateTime, DateTime) GenerateJwtToken(IEnumerable<Claim> claims, TimeSpan tokenLifeTime);
 
         /// <summary>
         /// Generates refresh token.

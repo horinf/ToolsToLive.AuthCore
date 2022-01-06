@@ -1,4 +1,4 @@
-﻿using ToolsToLive.AuthCore.Interfaces.Model;
+using ToolsToLive.AuthCore.Interfaces.Model;
 
 namespace ToolsToLive.AuthCore.Model
 {
@@ -10,7 +10,7 @@ namespace ToolsToLive.AuthCore.Model
         }
 
         /// <summary>
-        /// Indicates status of authentication (success, reason why fail, or just fault if something wrong)
+        /// Indicates status of authentication (success, reason why it fails, or just failed if something is wrong)
         /// </summary>
         public AuthResultType Result { get; private set; }
 

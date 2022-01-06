@@ -26,7 +26,7 @@ export class AccessTokenStorage<TUser extends AuthUserModel>  {
     let authString: string | null;
 
     if (isPlatformBrowser(this.platformId)) {
-      switch (this.settings.accessTokenStorage) {
+      switch (this.settings.accessTokenStorage ?? 'sessionStorage') {
         case 'memory':
           authString = this.memoryStorage.load(this.storageKey);
           break;
@@ -71,7 +71,7 @@ export class AccessTokenStorage<TUser extends AuthUserModel>  {
     const authData: AuthData<TUser> = { Token: authToken, User: user };
     const authString = JSON.stringify(authData);
     if (isPlatformBrowser(this.platformId)) {
-      switch (this.settings.accessTokenStorage) {
+      switch (this.settings.accessTokenStorage ?? 'sessionStorage') {
         case 'memory':
           this.memoryStorage.save(this.storageKey, authString);
           break;
@@ -101,7 +101,7 @@ export class AccessTokenStorage<TUser extends AuthUserModel>  {
 
   clean(): void {
     if (isPlatformBrowser(this.platformId)) {
-      switch (this.settings.accessTokenStorage) {
+      switch (this.settings.accessTokenStorage ?? 'sessionStorage') {
         case 'memory':
           this.memoryStorage.clean(this.storageKey);
           break;

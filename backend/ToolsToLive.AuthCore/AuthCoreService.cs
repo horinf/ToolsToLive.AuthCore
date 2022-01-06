@@ -117,37 +117,68 @@ namespace ToolsToLive.AuthCore
             // Mobile apps can't use cookies, but they can store device id by themselves.
             _authCookiesHelper.SetDeviceIdCookie(responseCookies, deviceId, refreshToken.ExpireDate);
 
-            var cookieToken = _identityService.GenerateAuthTokenForCookie(user);
-            _authCookiesHelper.SetAuthCookie(responseCookies, cookieToken.Token, cookieToken.ExpireDate);
+            if (_options.Value.AddTokenToCookie)
+            {
+                var cookieToken = _identityService.GenerateAuthTokenForCookie(user);
+                _authCookiesHelper.SetAuthCookie(responseCookies, cookieToken.Token, cookieToken.ExpireDate);
+            }
 
             return PrepareAuthResult(user, token, refreshToken);
         }
 
-        public async Task SignOut(string userId, string deviceId)
+        public async Task SignOut(string userId, string deviceId, IRequestCookieCollection requestCookies, IResponseCookies responseCookies)
         {
-            if (string.IsNullOrWhiteSpace(deviceId))
+            if (string.IsNullOrEmpty(deviceId))
             {
-                throw new ArgumentNullException(nameof(deviceId));
+                deviceId = _authCookiesHelper.GetDeviceIdFromCookie(requestCookies);
             }
 
-            await _refreshTokenStorageService.DeleteRefreshToken(userId, deviceId);
-        }
-
-        public async Task SignOutFromEverywhere(string userId)
-        {
-            await _refreshTokenStorageService.DeleteRefreshTokens(userId);
-        }
-
-        public async Task<AuthResult<TUser>> RefreshToken(string userId, string deviceId, string providedRefreshToken, IResponseCookies responseCookies)
-        {
             if (string.IsNullOrEmpty(userId))
             {
                 throw new ArgumentNullException(nameof(userId));
             }
 
-            if (string.IsNullOrWhiteSpace(deviceId))
+            if (string.IsNullOrEmpty(deviceId))
+            {
+                throw new ArgumentNullException(nameof(deviceId));
+            }
+
+            _authCookiesHelper.ClearDeviceIdCookie(responseCookies);
+            _authCookiesHelper.ClearAuthCookie(responseCookies);
+
+            await _refreshTokenStorageService.DeleteRefreshToken(userId, deviceId);
+        }
+
+        public async Task SignOutFromEverywhere(string userId, IResponseCookies responseCookies)
+        {
+            _authCookiesHelper.ClearDeviceIdCookie(responseCookies);
+            _authCookiesHelper.ClearAuthCookie(responseCookies);
+
+            await _refreshTokenStorageService.DeleteRefreshTokens(userId);
+        }
+
+        public async Task<AuthResult<TUser>> RefreshToken(string userId, string deviceId, string providedRefreshToken, IRequestCookieCollection requestCookies, IResponseCookies responseCookies)
+        {
+            if (string.IsNullOrEmpty(deviceId))
+            {
+                deviceId = _authCookiesHelper.GetDeviceIdFromCookie(requestCookies);
+            }
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentNullException(nameof(userId));
+            }
+
+            if (string.IsNullOrEmpty(deviceId))
             {
                 return new AuthResult<TUser>(AuthResultType.RefreshTokenWrong);
+            }
+
+            // retreive user from db
+            var user = await _userStore.GetUserById(userId);
+            if (user == null)
+            {
+                return new AuthResult<TUser>(AuthResultType.UserNotFound);
             }
 
             //verify refresh token
@@ -155,14 +186,6 @@ namespace ToolsToLive.AuthCore
             if (!verRefreshToken)
             {
                 return new AuthResult<TUser>(AuthResultType.RefreshTokenWrong);
-            }
-
-            // retreive user from db
-            var user = await _userStore.GetUserById(userId);
-
-            if (user == null)
-            {
-                return new AuthResult<TUser>(AuthResultType.UserNotFound);
             }
 
             // create token and refresh token
@@ -175,8 +198,11 @@ namespace ToolsToLive.AuthCore
             // Mobile apps can't use cookies, but they can store device id by themselves.
             _authCookiesHelper.SetDeviceIdCookie(responseCookies, deviceId, refreshToken.ExpireDate);
 
-            var cookieToken = _identityService.GenerateAuthTokenForCookie(user);
-            _authCookiesHelper.SetAuthCookie(responseCookies, cookieToken.Token, cookieToken.ExpireDate);
+            if (_options.Value.AddTokenToCookie)
+            {
+                var cookieToken = _identityService.GenerateAuthTokenForCookie(user);
+                _authCookiesHelper.SetAuthCookie(responseCookies, cookieToken.Token, cookieToken.ExpireDate);
+            }
 
             return PrepareAuthResult(user, token, refreshToken);
         }

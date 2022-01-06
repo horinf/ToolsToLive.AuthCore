@@ -1,8 +1,8 @@
 export enum AuthResultType {
-  Fault,
-  Success,
-  UserNotFound,
-  PasswordIsWrong,
-  RefreshTokenWrong,
-  LockedOut,
+  Failed = 1,
+  Success = 2,
+  UserNotFound = 3,
+  PasswordIsWrong = 4,
+  RefreshTokenWrong = 5,
+  LockedOut = 6,
 }

@@ -31,15 +31,15 @@ namespace ToolsToLive.AuthCore.Interfaces
         /// <returns>Auth result with token, refresh token and user</returns>
         Task<AuthResult<T>> SignIn(string userNameOrEmail, string password, string deviceId, IResponseCookies responseCookies);
 
-        Task SignOut(string userId, string deviceId);
+        Task SignOut(string userId, string deviceId, IRequestCookieCollection requestCookies, IResponseCookies responseCookies);
 
-        Task SignOutFromEverywhere(string userId);
+        Task SignOutFromEverywhere(string userId, IResponseCookies responseCookies);
 
         /// <summary>
         /// Validates refresh token (compares to refresh token in db) and creates new token
         /// Before call this method you should validate token (user must be authorized for creating new token)
         /// </summary>
         /// <returns>Auth result with token, refresh token and user</returns>
-        Task<AuthResult<T>> RefreshToken(string userId, string deviceId, string providedRefreshToken, IResponseCookies responseCookies);
+        Task<AuthResult<T>> RefreshToken(string userId, string deviceId, string providedRefreshToken, IRequestCookieCollection requestCookies, IResponseCookies responseCookies);
     }
 }

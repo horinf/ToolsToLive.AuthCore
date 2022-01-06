@@ -33,25 +33,34 @@ export class AuthService<TUser extends AuthUserModel> {
     return authDataPromise;
   }
 
+  /**
+   * SignIn
+   * @param userName  - user name (login)
+   * @param password - password (plain text)
+   * @returns 'AuthData<TUser>' if successed (resolved) or 'AuthResult<TUser> | null' if not (rejected)
+   */
   signInAsync(userName: string, password: string): Promise<AuthData<TUser> | null> {
     const signInResult = this.signInService.signInAsync(userName, password);
     signInResult.then((authData: AuthData<TUser>) => {
       this.authUpdate(authData);
-    }).catch(() => {
+    }).catch((err: AuthResult<AuthUserModel> | null) => {
       this.authUpdate(null);
     });
     return signInResult;
   }
 
-  // Manual token refresh -- can be useful when user's claims should be changed or smth like this
+  /**
+   * Manual token refresh -- can be useful when user's claims should be changed or smth like this
+   * @returns AuthData<TUser>
+   */
   async refreshTokenAsync(): Promise<AuthData<TUser>> {
     const authData = await this.tokenRefreshService.refreshTokenAsync();
     this.authUpdate(authData);
     return authData;
   }
 
-  customsignInAsync(authResult: AuthResult<TUser>): AuthData<TUser> | null {
-    const result = this.signInService.customsignInAsync(authResult);
+  customsignIn(authResult: AuthResult<TUser>): AuthData<TUser> | null {
+    const result = this.signInService.customsignIn(authResult);
     this.authUpdate(result);
     return result;
   }
@@ -59,6 +68,8 @@ export class AuthService<TUser extends AuthUserModel> {
   signOutAsync(): Promise<void> {
     const signInResult = this.signInService.signOutAsync();
     signInResult.then(() => {
+      this.authUpdate(null);
+    }).catch(() => {
       this.authUpdate(null);
     });
     return signInResult;

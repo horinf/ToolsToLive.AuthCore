@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ToolsToLive.AuthCore.Helpers;
@@ -27,6 +28,16 @@ namespace ToolsToLive.AuthCore
             where TUserStorageService : class, IUserStorageService<TUser>
             where TRefreshTokenStorageService : class, IRefreshTokenStorageService
         {
+            if (string.IsNullOrWhiteSpace(configurationSection[nameof(AuthOptions.Key)]))
+            {
+                throw new ArgumentException("Key must be set in configuration", nameof(configurationSection));
+            }
+
+            if (string.IsNullOrWhiteSpace(configurationSection[nameof(AuthOptions.CookieDomain)]))
+            {
+                throw new ArgumentException("CookieDomain must be set in configuration", nameof(configurationSection));
+            }
+
             services.Configure<AuthOptions>(configurationSection);
 
             services.AddSingleton<ISigningCredentialsProvider, SigningCredentialsProvider>();

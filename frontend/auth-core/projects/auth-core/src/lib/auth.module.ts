@@ -14,6 +14,7 @@ import { AccessService } from './services/access.service';
 import { AuthUserModel } from './model/AuthUserModel';
 import { SessionStorageService } from './services/internal/storage/session-storage.service';
 import { MemoryStorageService } from './services/internal/storage/memory-storage.service';
+import { TokenParserService } from './services/internal/token-parser.service';
 
 @NgModule({
   imports: [
@@ -28,6 +29,7 @@ export class AuthModule<TUser extends AuthUserModel> {
         AccessService,
         TokenRefreshService,
         CryptoService,
+        TokenParserService,
         LocalStorageService,
         SessionStorageService,
         MemoryStorageService,

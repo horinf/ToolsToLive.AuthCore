@@ -41,7 +41,7 @@ export class RefreshTokenStorage {
   save(authToken: AuthToken): void {
     const realDiff = authToken.ExpireDate.valueOf() - authToken.IssueDate.valueOf();
     const expDateValue = (new Date()).valueOf() + realDiff - 3000;
-    authToken.BrowserExpireDate = new Date(expDateValue);
+    authToken.BrowserExpireDate = new Date(expDateValue); // time in the browser may differ from the time on the server
     authToken.LifeTime = realDiff;
     const toStore = JSON.stringify(authToken);
     this.cookieStorage.save(this.storageName, toStore, authToken.BrowserExpireDate);

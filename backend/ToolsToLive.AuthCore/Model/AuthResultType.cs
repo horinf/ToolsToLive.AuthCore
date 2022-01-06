@@ -2,11 +2,11 @@ namespace ToolsToLive.AuthCore.Model
 {
     public enum AuthResultType
     {
-        Fault,
-        Success,
-        UserNotFound,
-        PasswordWrong,
-        RefreshTokenWrong,
-        LockedOut,
+        Failed = 1,
+        Success = 2,
+        UserNotFound = 3,
+        PasswordWrong = 4,
+        RefreshTokenWrong = 5,
+        LockedOut = 6,
     }
 }

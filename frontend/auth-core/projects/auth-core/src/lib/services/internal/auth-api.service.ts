@@ -8,18 +8,17 @@ import { AuthUserModel } from '../../model/AuthUserModel';
 
 @Injectable()
 export class AuthApiService<TUser extends AuthUserModel> {
-  private identityServerUrl: string;
 
   constructor(
     private http: HttpClient,
     private accessTokenStorage: AccessTokenStorage<TUser>,
-    @Inject(AUTH_CORE_SETTINGS_TOKEN) settings: AuthCoreSettings,
+    @Inject(AUTH_CORE_SETTINGS_TOKEN) private settings: AuthCoreSettings,
   ) {
-    this.identityServerUrl = settings.identityServerUrl;
   }
 
   signInAsync(userNameOrEmail: string, password: string, deviceId: string): Promise<AuthResult<TUser> | null> {
-    const url = `${this.identityServerUrl}/SignIn`;
+    const path = this.settings.signInPath ?? 'SignIn';
+    const url = `${this.settings.identityServerUrl}/${path}`;
     const requestBody = {userNameOrEmail, password, deviceId};
     const request = this.http.post<AuthResult<TUser>>(url, requestBody, { observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
 
@@ -27,7 +26,8 @@ export class AuthApiService<TUser extends AuthUserModel> {
   }
 
   signOutAsync(): Promise<AuthResult<TUser> | null> {
-    const url = `${this.identityServerUrl}/SignOut`;
+    const path = this.settings.signOutPath ?? 'SignOut';
+    const url = `${this.settings.identityServerUrl}/${path}`;
     const requestBody = {deviceId: ''};
 
     const authData = this.accessTokenStorage.load();
@@ -40,7 +40,8 @@ export class AuthApiService<TUser extends AuthUserModel> {
   }
 
   signOutFromEverywhereAsync(): Promise<AuthResult<TUser> | null> {
-    const url = `${this.identityServerUrl}/SignOutFromEverywhere`;
+    const path = this.settings.signOutFromEverywherePath ?? 'SignOutFromEverywhere';
+    const url = `${this.settings.identityServerUrl}/${path}`;
 
     const authData = this.accessTokenStorage.load();
     let headers = new HttpHeaders();
@@ -52,7 +53,8 @@ export class AuthApiService<TUser extends AuthUserModel> {
   }
 
   refreshTokenAsync(userId: string, refreshToken: string, deviceId: string): Promise<AuthResult<TUser> | null> {
-    const url = `${this.identityServerUrl}/RefreshToken`;
+    const path = this.settings.refreshTokenPath ?? 'RefreshToken';
+    const url = `${this.settings.identityServerUrl}/${path}`;
     const requestBody = {userId, refreshToken, deviceId};
     const request = this.http.post<AuthResult<TUser>>(url, requestBody, { observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
 
