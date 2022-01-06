@@ -1,44 +1,45 @@
 import { isPlatformServer } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { AuthData } from '../../model/AuthData';
+import { AuthUserModel } from '../../model/AuthUserModel';
 import { AccessTokenStorage } from './storage/access-token-storage.service';
 import { RefreshTokenStorage } from './storage/refresh-token-storage.service';
 import { TokenRefreshService } from './token-refresh.service';
 
 @Injectable()
-export class AuthDataService {
+export class AuthDataService<TUser extends AuthUserModel> {
 
-  private resultPromise?: Promise<AuthData | null>;
+  private resultPromise?: Promise<AuthData<TUser> | null>;
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: any,
-    private accessTokenStorage: AccessTokenStorage,
-    private tokenRefreshService: TokenRefreshService,
+    private accessTokenStorage: AccessTokenStorage<TUser>,
+    private tokenRefreshService: TokenRefreshService<TUser>,
     private refreshTokenStorage: RefreshTokenStorage,
     ) { }
 
-  getAuthDataAsync(): Promise<AuthData | null> {
+  getAuthDataAsync(): Promise<AuthData<TUser> | null> {
     // Call the logic and api only once, and if someone else wants to get data -- return promise
     if (this.resultPromise) {
       return this.resultPromise;
     }
 
-    const resultPromise = new Promise<AuthData | null>((resolve, reject) => {
+    const resultPromise = new Promise<AuthData<TUser> | null>((resolve, reject) => {
       // On the server side user is never authenticated!
       if (isPlatformServer(this.platformId)) {
         resolve(null);
       }
 
-      const authData = this.accessTokenStorage.load();
       if (this.refreshTokenStorage.isExist() === false) {
         this.accessTokenStorage.clean();
         resolve(null);
         return;
       }
 
+      const authData = this.accessTokenStorage.load();
       if (!authData) {
         this.tokenRefreshService.refreshTokenAsync()
-          .then((data: AuthData) => {
+          .then((data: AuthData<TUser>) => {
             resolve(data);
           }).catch((error: any) => {
             resolve(null);
@@ -55,7 +56,7 @@ export class AuthDataService {
       // Если срок жизни токена истёк
       if (now > exp) {
         this.tokenRefreshService.refreshTokenAsync()
-          .then((data: AuthData) => {
+          .then((data: AuthData<TUser>) => {
             resolve(data);
           }).catch((error: any) => {
             resolve(null);

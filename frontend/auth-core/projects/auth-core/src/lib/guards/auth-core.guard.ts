@@ -5,6 +5,7 @@ import { AuthService } from '../services/auth.service';
 import { AuthData } from '../model/AuthData';
 import { AccessService } from '../services/access.service';
 import { isPlatformBrowser } from '@angular/common';
+import { AuthUserModel } from '../model/AuthUserModel';
 
 /**
  * Without any parameters guards checks if user is authenticated
@@ -13,10 +14,10 @@ import { isPlatformBrowser } from '@angular/common';
 @Injectable({
   providedIn: 'root'
 })
-export class AuthCoreGuard implements CanLoad, CanActivate {
+export class AuthCoreGuard<TUser extends AuthUserModel> implements CanLoad, CanActivate {
 
-  constructor(private authService: AuthService,
-              private accessService: AccessService,
+  constructor(private authService: AuthService<TUser>,
+              private accessService: AccessService<TUser>,
               @Inject(PLATFORM_ID) private platformId: any,
               private router: Router) {
   }
@@ -25,7 +26,7 @@ export class AuthCoreGuard implements CanLoad, CanActivate {
     segments: UrlSegment[]): boolean | UrlTree | Observable<boolean | UrlTree> | Promise<boolean | UrlTree> {
       return new Promise((resolve, reject) => {
         this.authService.getAuthDataAsync()
-          .then((data: AuthData | null) => {
+          .then((data: AuthData<TUser> | null) => {
             if (data === null) {
               if (isPlatformBrowser(this.platformId)) {
                 this.router.navigate(['/']);
@@ -38,7 +39,7 @@ export class AuthCoreGuard implements CanLoad, CanActivate {
               }
               resolve(false);
             }
-  
+
             resolve(true);
           })
           .catch(err => {
@@ -52,7 +53,7 @@ export class AuthCoreGuard implements CanLoad, CanActivate {
     state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
     return new Promise((resolve, reject) => {
       this.authService.getAuthDataAsync()
-        .then((data: AuthData | null) => {
+        .then((data: AuthData<TUser> | null) => {
           if (data === null) {
             if (isPlatformBrowser(this.platformId)) {
               this.router.navigate(['/']);
@@ -74,11 +75,11 @@ export class AuthCoreGuard implements CanLoad, CanActivate {
     });
   }
 
-  checkRoles(data: Data | undefined, authData: AuthData | null): boolean {
+  checkRoles(data: Data | undefined, authData: AuthData<TUser> | null): boolean {
     if (!data) {
       return true;
     }
-    const roles = data['roles'] as Array<string>;
+    const roles = data.roles as Array<string>;
 
     if (roles && roles.length > 0) {
       return this.accessService.isInOneOfRoles(authData, ...roles);

@@ -11,13 +11,16 @@ import { LocalStorageService } from './services/internal/storage/local-storage.s
 import { CookieStorageService } from './services/internal/storage/cookie-storage.service';
 import { CryptoService } from './services/internal/storage/crypto.service';
 import { AccessService } from './services/access.service';
+import { AuthUserModel } from './model/AuthUserModel';
+import { SessionStorageService } from './services/internal/storage/session-storage.service';
+import { MemoryStorageService } from './services/internal/storage/memory-storage.service';
 
 @NgModule({
   imports: [
   ]
 })
-export class AuthModule {
-  static forRoot(): ModuleWithProviders<AuthModule> {
+export class AuthModule<TUser extends AuthUserModel> {
+  static forRoot<TUser extends AuthUserModel>(): ModuleWithProviders<AuthModule<TUser>> {
     return {
       ngModule: AuthModule,
       providers: [
@@ -26,6 +29,8 @@ export class AuthModule {
         TokenRefreshService,
         CryptoService,
         LocalStorageService,
+        SessionStorageService,
+        MemoryStorageService,
         CookieStorageService,
         AccessTokenStorage,
         RefreshTokenStorage,

@@ -4,28 +4,29 @@ import { Observable } from 'rxjs';
 import { AuthResult } from '../../model/AuthResult';
 import { AccessTokenStorage } from './storage/access-token-storage.service';
 import { AuthCoreSettings, AUTH_CORE_SETTINGS_TOKEN } from '../../model/auth-core-settings';
+import { AuthUserModel } from '../../model/AuthUserModel';
 
 @Injectable()
-export class AuthApiService {
+export class AuthApiService<TUser extends AuthUserModel> {
   private identityServerUrl: string;
 
   constructor(
     private http: HttpClient,
-    private accessTokenStorage: AccessTokenStorage,
+    private accessTokenStorage: AccessTokenStorage<TUser>,
     @Inject(AUTH_CORE_SETTINGS_TOKEN) settings: AuthCoreSettings,
   ) {
     this.identityServerUrl = settings.identityServerUrl;
   }
 
-  signInAsync(userNameOrEmail: string, password: string, deviceId: string): Promise<AuthResult | null> {
+  signInAsync(userNameOrEmail: string, password: string, deviceId: string): Promise<AuthResult<TUser> | null> {
     const url = `${this.identityServerUrl}/SignIn`;
     const requestBody = {userNameOrEmail, password, deviceId};
-    const request = this.http.post<AuthResult>(url, requestBody, { observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
+    const request = this.http.post<AuthResult<TUser>>(url, requestBody, { observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
 
     return this.HandleResultAsync(request);
   }
 
-  signOutAsync(): Promise<AuthResult | null> {
+  signOutAsync(): Promise<AuthResult<TUser> | null> {
     const url = `${this.identityServerUrl}/SignOut`;
     const requestBody = {deviceId: ''};
 
@@ -34,11 +35,11 @@ export class AuthApiService {
     if (authData?.Token) {
       headers = headers.append('Authorization', `Bearer ${authData.Token.Token}`);
     }
-    const request = this.http.post<AuthResult>(url, requestBody, {headers, observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
+    const request = this.http.post<AuthResult<TUser>>(url, requestBody, {headers, observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
     return this.HandleResultAsync(request);
   }
 
-  signOutFromEverywhereAsync(): Promise<AuthResult | null> {
+  signOutFromEverywhereAsync(): Promise<AuthResult<TUser> | null> {
     const url = `${this.identityServerUrl}/SignOutFromEverywhere`;
 
     const authData = this.accessTokenStorage.load();
@@ -46,22 +47,22 @@ export class AuthApiService {
     if (authData?.Token) {
       headers = headers.append('Authorization', `Bearer ${authData.Token.Token}`);
     }
-    const request = this.http.post<AuthResult>(url, null, {headers, observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
+    const request = this.http.post<AuthResult<TUser>>(url, null, {headers, observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
     return this.HandleResultAsync(request);
   }
 
-  refreshTokenAsync(userId: string, refreshToken: string, deviceId: string): Promise<AuthResult | null> {
+  refreshTokenAsync(userId: string, refreshToken: string, deviceId: string): Promise<AuthResult<TUser> | null> {
     const url = `${this.identityServerUrl}/RefreshToken`;
     const requestBody = {userId, refreshToken, deviceId};
-    const request = this.http.post<AuthResult>(url, requestBody, { observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
+    const request = this.http.post<AuthResult<TUser>>(url, requestBody, { observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
 
     return this.HandleResultAsync(request);
   }
 
-  private HandleResultAsync(request: Observable<HttpResponse<AuthResult | null>>): Promise<AuthResult | null> {
-    const promise = new Promise<AuthResult | null>((resolve, reject) => {
+  private HandleResultAsync(request: Observable<HttpResponse<AuthResult<TUser> | null>>): Promise<AuthResult<TUser> | null> {
+    const promise = new Promise<AuthResult<TUser> | null>((resolve, reject) => {
       request
-        .subscribe((response: HttpResponse<AuthResult | null>) => {
+        .subscribe((response: HttpResponse<AuthResult<TUser> | null>) => {
           const data = response.body;
           if (data) {
             if (data.Token?.ExpireDate) {

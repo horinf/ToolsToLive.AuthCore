@@ -5,7 +5,7 @@ import { CookieStorageService } from './cookie-storage.service';
 
 @Injectable()
 export class RefreshTokenStorage {
-  private storageName = 'mydomain_rt';
+  private readonly storageName: string = 'mydomain_rt';
 
   constructor(
     @Inject(AUTH_CORE_SETTINGS_TOKEN) settings: AuthCoreSettings,

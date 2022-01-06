@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { AuthData } from '../model/AuthData';
+import { AuthUserModel } from '../model/AuthUserModel';
 import { AuthService } from './auth.service';
 
 @Injectable()
-export class AccessService {
+export class AccessService<TUser extends AuthUserModel> {
 
   constructor(
-    private authService: AuthService
+    private authService: AuthService<TUser>
   ) { }
 
   async isInOneOfRolesAsync(...role: string[]): Promise<boolean> {
@@ -14,7 +15,7 @@ export class AccessService {
     return this.isInOneOfRoles(authData, ...role);
   }
 
-  isInOneOfRoles(authData: AuthData | null, ...roles: string[]): boolean {
+  isInOneOfRoles(authData: AuthData<TUser> | null, ...roles: string[]): boolean {
     if (!roles || !roles.length) {
       return false;
     }
@@ -27,11 +28,11 @@ export class AccessService {
     return this.isInRole(authData, role);
   }
 
-  isInRole(authData: AuthData | null, role: string): boolean {
+  isInRole(authData: AuthData<TUser> | null, role: string): boolean {
     if (!authData?.User?.Roles) {
       return false;
     }
-    if (authData.User.Roles.findIndex(x => x.Id === role) > -1) {
+    if (authData.User.Roles.findIndex(x => x === role) > -1) {
       return true;
     }
     return false;

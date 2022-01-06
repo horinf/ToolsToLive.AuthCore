@@ -6,23 +6,24 @@ import { AuthApiService } from './auth-api.service';
 import { DeviceIdService } from './device-id.service';
 import { RefreshTokenStorage } from './storage/refresh-token-storage.service';
 import { AuthResultType } from '../../model/AuthResultType';
+import { AuthUserModel } from '../../model/AuthUserModel';
 
 @Injectable()
-export class SignInService {
+export class SignInService<TUser extends AuthUserModel> {
 
 constructor(
   private deviceIdService: DeviceIdService,
-  private authApiService: AuthApiService,
-  private accessTokenStorage: AccessTokenStorage,
+  private authApiService: AuthApiService<TUser>,
+  private accessTokenStorage: AccessTokenStorage<TUser>,
   private refreshTokenStorage: RefreshTokenStorage,
 ) { }
 
-signInAsync(userName: string, password: string): Promise<AuthData> {
-  const result = new Promise<AuthData>((resolve, reject) => {
+signInAsync(userName: string, password: string): Promise<AuthData<TUser>> {
+  const result = new Promise<AuthData<TUser>>((resolve, reject) => {
     const deviceId = this.deviceIdService.createDeviceId();
 
     const authDataRequest = this.authApiService.signInAsync(userName, password, deviceId);
-    authDataRequest.then((data: AuthResult | null) => {
+    authDataRequest.then((data: AuthResult<TUser> | null) => {
       if (data?.IsSuccess) {
         this.accessTokenStorage.save(data.Token, data.User);
         this.refreshTokenStorage.save(data.RefreshToken);
@@ -41,7 +42,7 @@ signInAsync(userName: string, password: string): Promise<AuthData> {
   return result;
 }
 
-customsignInAsync(authResult: AuthResult): AuthData | null {
+customsignInAsync(authResult: AuthResult<TUser>): AuthData<TUser> | null {
   if (authResult?.IsSuccess) {
     this.accessTokenStorage.save(authResult.Token, authResult.User);
     this.refreshTokenStorage.save(authResult.RefreshToken);
@@ -82,14 +83,14 @@ signOutFromEverywhereAsync(): Promise<void> {
   return result;
 }
 
-private getFaultMessage(data: AuthResult | null): string {
+private getFaultMessage(data: AuthResult<TUser> | null): string {
   if (!data) {
     return 'Something went wrong - server did not return the data';
   }
 
   switch (data.Result) {
     case AuthResultType.Fault:
-      return 'Неудачная попытка входа';
+      return 'Unable to sign in';
       case AuthResultType.LockedOut:
       return 'User is locked, please try again later';
       case AuthResultType.PasswordIsWrong:

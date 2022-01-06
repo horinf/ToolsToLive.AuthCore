@@ -1,11 +1,9 @@
-import { AuthUserRoleModel } from './AuthUserRoleModel';
+import { ClaimModel } from './ClaimModel';
 
 export interface AuthUserModel {
   Id: string;
   UserName: string;
   Email: string;
-  FirstName: string;
-  MiddleName: string;
-  LastName: string;
-  Roles: AuthUserRoleModel[];
+  Roles?: string[];
+  Claims?: ClaimModel;
 }

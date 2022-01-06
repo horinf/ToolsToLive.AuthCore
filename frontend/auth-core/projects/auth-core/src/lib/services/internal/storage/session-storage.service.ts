@@ -3,26 +3,26 @@ import { isPlatformBrowser } from '@angular/common';
 import { CryptoService } from './crypto.service';
 
 @Injectable()
-export class LocalStorageService {
+export class SessionStorageService {
   constructor(
     @Inject(PLATFORM_ID) private platformId: any,
     private crypto: CryptoService,
-    // private cookieStorage: CookieStorageService, // can be used as fallback - if localStorage is not supported, then fallback to cookies
+    // private cookieStorage: CookieStorageService, // can be used as fallback - if sessionStorage is not supported, then fallback to cookies
   ) { }
 
   /** Saves value to storage. Works in the 'browser side' only, when rendering on the server side - does nothing */
   save(key: string, value: string): void {
     if (isPlatformBrowser(this.platformId)) {
-      if (localStorage) {
+      if (sessionStorage) {
         try {
           const encryptedValue = this.crypto.encode(value);
-          localStorage.setItem(key, encryptedValue);
+          sessionStorage.setItem(key, encryptedValue);
         } catch (error) {
-          // in some browsers (like old Safari) localStorage is defined, but if you try set or read value - it throws an error
-          throw new Error('Unable to save data to localStorage');
+          // in some browsers (like old Safari) sessionStorage is defined, but if you try set or read value - it throws an error
+          throw new Error('Unable to save data to sessionStorage');
         }
       } else {
-        throw new Error('Unable to save data to localStorage');
+        throw new Error('Unable to save data to sessionStorage');
       }
     }
   }
@@ -31,16 +31,16 @@ export class LocalStorageService {
   load(key: string): string | null {
     let fromStore = null;
     if (isPlatformBrowser(this.platformId)) {
-      if (localStorage){
+      if (sessionStorage){
         try {
-          const encryptedValue = localStorage.getItem(key);
+          const encryptedValue = sessionStorage.getItem(key);
           fromStore = this.crypto.decode(encryptedValue);
         } catch (error) {
-          // in some browsers localStorage is defined, but if you try set or read value - it throws an error
-          throw new Error('Unable to load data from localStorage');
+          // in some browsers sessionStorage is defined, but if you try set or read value - it throws an error
+          throw new Error('Unable to load data from sessionStorage');
         }
       } else {
-          throw new Error('Unable to load data from localStorage');
+          throw new Error('Unable to load data from sessionStorage');
       }
     }
     return fromStore;
@@ -49,15 +49,15 @@ export class LocalStorageService {
   /** Deletes value in storage. Works in the 'browser side' only, when rendering on the server side - does nothing */
   clean(key: string): void {
     if (isPlatformBrowser(this.platformId)) {
-      if (localStorage) {
-        // in some browsers localStorage is defined, but if you try set or read value - it throws an error
+      if (sessionStorage) {
+        // in some browsers sessionStorage is defined, but if you try set or read value - it throws an error
         try {
-          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
         } catch (error) {
-          throw new Error('Unable to remove data from localStorage');
+          throw new Error('Unable to remove data from sessionStorage');
         }
       } else {
-          throw new Error('Unable to remove data from localStorage');
+          throw new Error('Unable to remove data from sessionStorage');
       }
     }
   }

@@ -11,5 +11,4 @@ export * from './lib/model/AuthResult';
 export * from './lib/model/AuthResultType';
 export * from './lib/model/AuthToken';
 export * from './lib/model/AuthUserModel';
-export * from './lib/model/AuthUserRoleModel';
 export * from './lib/model/auth-core-settings';
