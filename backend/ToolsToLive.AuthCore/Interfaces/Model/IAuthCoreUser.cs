@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
+using Newtonsoft.Json;
 
 namespace ToolsToLive.AuthCore.Interfaces.Model
 {
-    public interface IUser
+    public interface IAuthCoreUser
     {
         /// <summary>
         /// User identifier (will be added to token)
@@ -19,20 +20,25 @@ namespace ToolsToLive.AuthCore.Interfaces.Model
         /// <summary>
         /// Password hash (from/to database) (is used to save passwordHash to storage)
         /// </summary>
+        [JsonIgnore]
         string PasswordHash { get; set; }
 
         /// <summary>
         /// User's roles (will be added to token)
         /// </summary>
-        IEnumerable<IRole> Roles { get; }
+        [JsonIgnore]
+        List<string> Roles { get; }
 
         /// <summary>
         /// Additional claims (will be added to token)
         /// </summary>
-        IEnumerable<Claim> Claims { get; }
+        [JsonIgnore]
+        List<Claim> Claims { get; }
 
+        [JsonIgnore]
         DateTime? LockoutEndDate { get; set; }
 
+        [JsonIgnore]
         int AccessFailedCount { get; set; }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using ToolsToLive.AuthCore.Interfaces.Model;
+using ToolsToLive.AuthCore.Model;
 
 namespace ToolsToLive.AuthCore.Interfaces.IdentityServices
 {
@@ -11,14 +12,14 @@ namespace ToolsToLive.AuthCore.Interfaces.IdentityServices
         /// Generates new token.
         /// </summary>
         /// <returns>Token</returns>
-        IAuthToken GenerateAuthToken(IUser user);
+        AuthToken GenerateAuthToken(IAuthCoreUser user);
 
         /// <summary>
         /// Generates token for cookies
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        IAuthToken GenerateAuthTokenForCookie(IUser user);
+        AuthToken GenerateAuthTokenForCookie(IAuthCoreUser user);
 
         //(string, DateTime, DateTime) GenerateJwtToken(IEnumerable<Claim> claims, TimeSpan tokenLifeTime);
 
@@ -26,6 +27,6 @@ namespace ToolsToLive.AuthCore.Interfaces.IdentityServices
         /// Generates refresh token.
         /// </summary>
         /// <returns>Refresh token.</returns>
-        IAuthToken GenerateRefreshToken(IUser user);
+        RefreshToken GenerateRefreshToken(IAuthCoreUser user);
     }
 }

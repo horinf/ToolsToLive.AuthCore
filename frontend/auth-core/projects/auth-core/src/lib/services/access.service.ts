@@ -1,10 +1,14 @@
 import { Injectable } from '@angular/core';
 import { AuthData } from '../model/AuthData';
-import { AuthUserModel } from '../model/AuthUserModel';
 import { AuthService } from './auth.service';
 
 @Injectable()
-export class AccessService<TUser extends AuthUserModel> {
+export class AccessService<TUser> {
+
+  public static readonly TokenTransportClaim = 'AuthCoreTokenTransport';
+  public static readonly RoleClaim = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+  public static readonly UserIdClaim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
+  public static readonly UserNameClaim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
 
   constructor(
     private authService: AuthService<TUser>
@@ -29,10 +33,22 @@ export class AccessService<TUser extends AuthUserModel> {
   }
 
   isInRole(authData: AuthData<TUser> | null, role: string): boolean {
-    if (!authData?.User?.Roles) {
+    if (!authData?.Claims) {
       return false;
     }
-    if (authData.User.Roles.findIndex(x => x === role) > -1) {
+    return this.hasClaim(authData, AccessService.RoleClaim, role);
+  }
+
+  async hasClaimAsync(type: string, value: string): Promise<boolean> {
+    const authData = await this.authService.getAuthDataAsync();
+    return this.hasClaim(authData, type, value);
+  }
+
+  hasClaim(authData: AuthData<TUser> | null, type: string, value: string): boolean {
+    if (!authData?.Claims || !(authData?.Claims.length > 0)) {
+      return false;
+    }
+    if (authData.Claims.findIndex(x => x.Type === type && x.Value === value) > -1) {
       return true;
     }
     return false;

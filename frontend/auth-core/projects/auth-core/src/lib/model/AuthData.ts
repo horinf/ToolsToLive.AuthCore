@@ -1,7 +1,10 @@
-import { AuthToken } from './AuthToken';
-import { AuthUserModel } from './AuthUserModel';
+import { ClaimModel } from './ClaimModel';
 
-export interface AuthData<TUser extends AuthUserModel> {
+export interface AuthData<TUser> {
     User: TUser;
-    Token: AuthToken;
+    AccessToken: string;
+
+    BrowserExpireDate: number; // Date.valueOf()
+    LifeTime: number;
+    Claims: ClaimModel[];
 }

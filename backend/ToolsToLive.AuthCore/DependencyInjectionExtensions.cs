@@ -24,7 +24,7 @@ namespace ToolsToLive.AuthCore
         /// <param name="configurationSection">Configuration section that should match to <see cref="AuthOptions"/> class.</param>
         /// <returns></returns>
         public static IServiceCollection AddAuthCore<TUser, TUserStorageService, TRefreshTokenStorageService>(this IServiceCollection services, IConfigurationSection configurationSection)
-            where TUser : IUser
+            where TUser : IAuthCoreUser
             where TUserStorageService : class, IUserStorageService<TUser>
             where TRefreshTokenStorageService : class, IRefreshTokenStorageService
         {

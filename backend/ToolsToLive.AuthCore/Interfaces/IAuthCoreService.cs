@@ -6,7 +6,7 @@ using ToolsToLive.AuthCore.Model;
 
 namespace ToolsToLive.AuthCore.Interfaces
 {
-    public interface IAuthCoreService<T> where T : IUser
+    public interface IAuthCoreService<T> where T : IAuthCoreUser
     {
         /// <summary>
         /// Gets ClaimsPrincipal by access token

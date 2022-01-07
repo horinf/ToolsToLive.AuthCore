@@ -1,11 +1,10 @@
 import { AuthResultType } from './AuthResultType';
-import { AuthToken } from './AuthToken';
-import { AuthUserModel } from './AuthUserModel';
+import { RefreshToken } from './RefreshToken';
 
-export interface AuthResult<TUser extends AuthUserModel> {
+export interface AuthResult<TUser> {
   Result: AuthResultType;
   User: TUser;
-  Token: AuthToken;
-  RefreshToken: AuthToken;
+  AccessToken: string;
+  RefreshToken: RefreshToken;
   IsSuccess: boolean;
 }

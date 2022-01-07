@@ -28,48 +28,44 @@ namespace ToolsToLive.AuthCore.IdentityServices
             _authOptions = authOptions;
         }
 
-        public IAuthToken GenerateAuthToken(IUser user)
+        public AuthToken GenerateAuthToken(IAuthCoreUser user)
         {
             var claims = _identityProvider.GetClaimsForUser(user);
             claims.Add(new Claim(AuthCoreConstants.TokenTransportClaim, TokenTransport.Header.ToString()));
-            (string encodedJwt, DateTime now, DateTime expires) = GenerateJwtToken(claims, _authOptions.Value.TokenLifetime);
+            (string encodedJwt, DateTime expires) = GenerateJwtToken(claims, _authOptions.Value.TokenLifetime);
 
-            IAuthToken token = new AuthToken
+            var token = new AuthToken
             {
                 Token = encodedJwt,
-                IssueDate = now,
                 ExpireDate = expires,
-                UserId = user.Id,
             };
 
             return token;
         }
 
-        public IAuthToken GenerateAuthTokenForCookie(IUser user)
+        public AuthToken GenerateAuthTokenForCookie(IAuthCoreUser user)
         {
             var claims = _identityProvider.GetClaimsForUser(user);
             claims.Add(new Claim(AuthCoreConstants.TokenTransportClaim, TokenTransport.Cookie.ToString()));
-            (string encodedJwt, DateTime now, DateTime expires) = GenerateJwtToken(claims, _authOptions.Value.TokenLifetime);
+            (string encodedJwt, DateTime expires) = GenerateJwtToken(claims, _authOptions.Value.TokenLifetime);
 
-            IAuthToken token = new AuthToken
+            var token = new AuthToken
             {
                 Token = encodedJwt,
-                IssueDate = now,
                 ExpireDate = expires,
-                UserId = user.Id,
             };
 
             return token;
         }
 
-        public IAuthToken GenerateRefreshToken(IUser user)
+        public RefreshToken GenerateRefreshToken(IAuthCoreUser user)
         {
             var tokenString = _tokenGenerator.GenerateCode();
 
             var now = DateTime.UtcNow;
             var expires = now.Add(_authOptions.Value.RefreshTokenLifeTime);
 
-            IAuthToken refreshToken = new AuthToken
+            var refreshToken = new RefreshToken
             {
                 Token = tokenString,
                 IssueDate = now,
@@ -80,7 +76,7 @@ namespace ToolsToLive.AuthCore.IdentityServices
             return refreshToken;
         }
 
-        private (string, DateTime, DateTime) GenerateJwtToken(IEnumerable<Claim> claims, TimeSpan tokenLifeTime)
+        private (string, DateTime) GenerateJwtToken(IEnumerable<Claim> claims, TimeSpan tokenLifeTime)
         {
             if (tokenLifeTime == TimeSpan.Zero)
             {
@@ -100,7 +96,7 @@ namespace ToolsToLive.AuthCore.IdentityServices
                 );
 
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-            return (encodedJwt, now, expires);
+            return (encodedJwt, expires);
         }
     }
 }

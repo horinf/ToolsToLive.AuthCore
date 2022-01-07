@@ -1,13 +1,12 @@
 import { isPlatformServer } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { AuthData } from '../../model/AuthData';
-import { AuthUserModel } from '../../model/AuthUserModel';
 import { AccessTokenStorage } from './storage/access-token-storage.service';
 import { RefreshTokenStorage } from './storage/refresh-token-storage.service';
 import { TokenRefreshService } from './token-refresh.service';
 
 @Injectable()
-export class AuthDataService<TUser extends AuthUserModel> {
+export class AuthDataService<TUser> {
 
   private resultPromise?: Promise<AuthData<TUser> | null>;
 
@@ -51,7 +50,7 @@ export class AuthDataService<TUser extends AuthUserModel> {
       // const realDiff = authData.Token.ExpireDate.valueOf() - authData.Token.IssueDate.valueOf();
       // const timePass = ((new Date()).valueOf() - authData.Token.IssuedBrouserDate.valueOf()) + 5000;
       const now = (new Date()).valueOf();
-      const exp = authData.Token.BrowserExpireDate.valueOf();
+      const exp = authData.BrowserExpireDate.valueOf();
 
       // Если срок жизни токена истёк
       if (now > exp) {
@@ -64,8 +63,8 @@ export class AuthDataService<TUser extends AuthUserModel> {
           });
         return;
       } else {
-        // Refresh token in the background if half of the token lifetim has passed
-        if ((exp - now) < authData.Token.LifeTime / 2) {
+        // Refresh token in the background if 3 quarters of the token lifetime  has passed
+        if ((exp - now) < authData.LifeTime / 4) {
           this.tokenRefreshService.refreshTokenAsync();
         }
       }

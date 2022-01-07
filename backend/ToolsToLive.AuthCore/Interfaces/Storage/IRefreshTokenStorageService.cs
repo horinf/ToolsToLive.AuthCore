@@ -1,7 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ToolsToLive.AuthCore.Interfaces.Model;
+using ToolsToLive.AuthCore.Model;
 
 namespace ToolsToLive.AuthCore.Interfaces.Storage
 {
@@ -11,23 +10,23 @@ namespace ToolsToLive.AuthCore.Interfaces.Storage
         /// Gets refresh token from db by user name
         /// </summary>
         /// <returns>Auth token</returns>
-        Task<IRefreshToken> GetRefreshToken(string userId, string deviceId);
+        Task<RefreshToken> GetRefreshToken(string userId, string deviceId);
 
         /// <summary>
         /// Gets refresh token from db by user name
         /// </summary>
         /// <returns>Auth token</returns>
-        Task<List<IRefreshToken>> GetRefreshTokens(string userId);
+        Task<List<RefreshToken>> GetRefreshTokens(string userId);
 
         /// <summary>
         /// Saves new refresh token to database (if already exists should be overwritten)
         /// </summary>
-        Task SaveNewRefreshToken(IAuthToken authToken, string deviceId);
+        Task SaveNewRefreshToken(RefreshToken authToken, string deviceId);
 
         /// <summary>
         /// Updates refresh token that already exists
         /// </summary>
-        Task UpdateRefreshToken(string userId, string deviceId, IAuthToken refreshToken);
+        Task UpdateRefreshToken(string userId, string deviceId, RefreshToken refreshToken);
 
         /// <summary>
         /// Deletes refresh token from Db (e.g. when logout)

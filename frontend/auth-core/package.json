@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lib:build": "ng build auth-core --prod"
+    "lib:build": "ng build auth-core"
   },
   "private": true,
   "dependencies": {

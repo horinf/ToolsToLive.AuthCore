@@ -19,7 +19,7 @@ namespace ToolsToLive.AuthCore.IdentityServices
         //    return claimsIdentity;
         //}
 
-        public List<Claim> GetClaimsForUser(IUser user)
+        public List<Claim> GetClaimsForUser(IAuthCoreUser user)
         {
             var claims = new List<Claim>
             {
@@ -31,7 +31,7 @@ namespace ToolsToLive.AuthCore.IdentityServices
             {
                 foreach (var item in user.Roles)
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, item.Id));
+                    claims.Add(new Claim(ClaimsIdentity.DefaultRoleClaimType, item));
                 }
             }
 

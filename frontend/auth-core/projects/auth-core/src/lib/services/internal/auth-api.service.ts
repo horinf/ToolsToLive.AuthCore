@@ -4,10 +4,9 @@ import { Observable } from 'rxjs';
 import { AuthResult } from '../../model/AuthResult';
 import { AccessTokenStorage } from './storage/access-token-storage.service';
 import { AuthCoreSettings, AUTH_CORE_SETTINGS_TOKEN } from '../../model/auth-core-settings';
-import { AuthUserModel } from '../../model/AuthUserModel';
 
 @Injectable()
-export class AuthApiService<TUser extends AuthUserModel> {
+export class AuthApiService<TUser> {
 
   constructor(
     private http: HttpClient,
@@ -32,8 +31,8 @@ export class AuthApiService<TUser extends AuthUserModel> {
 
     const authData = this.accessTokenStorage.load();
     let headers = new HttpHeaders();
-    if (authData?.Token) {
-      headers = headers.append('Authorization', `Bearer ${authData.Token.Token}`);
+    if (authData?.AccessToken) {
+      headers = headers.append('Authorization', `Bearer ${authData.AccessToken}`);
     }
     const request = this.http.post<AuthResult<TUser>>(url, requestBody, {headers, observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
     return this.HandleResultAsync(request);
@@ -45,8 +44,8 @@ export class AuthApiService<TUser extends AuthUserModel> {
 
     const authData = this.accessTokenStorage.load();
     let headers = new HttpHeaders();
-    if (authData?.Token) {
-      headers = headers.append('Authorization', `Bearer ${authData.Token.Token}`);
+    if (authData?.AccessToken) {
+      headers = headers.append('Authorization', `Bearer ${authData.AccessToken}`);
     }
     const request = this.http.post<AuthResult<TUser>>(url, null, {headers, observe: 'response', reportProgress: false, responseType: 'json', withCredentials: true });
     return this.HandleResultAsync(request);
@@ -67,12 +66,6 @@ export class AuthApiService<TUser extends AuthUserModel> {
         .subscribe((response: HttpResponse<AuthResult<TUser> | null>) => {
           const data = response.body;
           if (data) {
-            if (data.Token?.ExpireDate) {
-              data.Token.ExpireDate = new Date(data.Token.ExpireDate);
-            }
-            if (data.Token?.IssueDate) {
-              data.Token.IssueDate = new Date(data.Token.IssueDate);
-            }
             if (data.RefreshToken?.ExpireDate) {
               data.RefreshToken.ExpireDate = new Date(data.RefreshToken.ExpireDate);
             }

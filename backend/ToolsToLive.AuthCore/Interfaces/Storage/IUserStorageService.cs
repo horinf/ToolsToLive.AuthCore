@@ -4,7 +4,7 @@ using ToolsToLive.AuthCore.Interfaces.Model;
 
 namespace ToolsToLive.AuthCore.Interfaces.Storage
 {
-    public interface IUserStorageService<TUser> where TUser : IUser
+    public interface IUserStorageService<TUser> where TUser : IAuthCoreUser
     {
         /// <summary>
         /// Gets user from db by user id

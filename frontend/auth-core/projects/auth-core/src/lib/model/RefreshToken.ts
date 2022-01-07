@@ -1,6 +1,5 @@
-import { ClaimModel } from './ClaimModel';
 
-export interface AuthToken {
+export interface RefreshToken {
   UserId: string;
   Token: string;
   IssueDate: Date;
@@ -9,10 +8,4 @@ export interface AuthToken {
   // Date of token expiration in current browser (just in case if browser time is different from server)
   BrowserExpireDate: Date;
   LifeTime: number;
-}
-
-export interface TokenInfo {
-  IssueDate: Date;
-  ExpireDate: Date;
-  Claims: ClaimModel[];
 }

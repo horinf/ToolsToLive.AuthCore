@@ -5,7 +5,6 @@ import { AuthService } from '../services/auth.service';
 import { AuthData } from '../model/AuthData';
 import { AccessService } from '../services/access.service';
 import { isPlatformBrowser } from '@angular/common';
-import { AuthUserModel } from '../model/AuthUserModel';
 
 /**
  * Without any parameters guards checks if user is authenticated
@@ -14,7 +13,7 @@ import { AuthUserModel } from '../model/AuthUserModel';
 @Injectable({
   providedIn: 'root'
 })
-export class AuthCoreGuard<TUser extends AuthUserModel> implements CanLoad, CanActivate {
+export class AuthCoreGuard<TUser> implements CanLoad, CanActivate {
 
   constructor(private authService: AuthService<TUser>,
               private accessService: AccessService<TUser>,
@@ -79,7 +78,7 @@ export class AuthCoreGuard<TUser extends AuthUserModel> implements CanLoad, CanA
     if (!data) {
       return true;
     }
-    const roles = data.roles as Array<string>;
+    const roles = data['roles'] as Array<string>;
 
     if (roles && roles.length > 0) {
       return this.accessService.isInOneOfRoles(authData, ...roles);

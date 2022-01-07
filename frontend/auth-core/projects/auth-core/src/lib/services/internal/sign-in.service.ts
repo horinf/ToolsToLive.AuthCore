@@ -6,11 +6,10 @@ import { AuthApiService } from './auth-api.service';
 import { DeviceIdService } from './device-id.service';
 import { RefreshTokenStorage } from './storage/refresh-token-storage.service';
 import { AuthResultType } from '../../model/AuthResultType';
-import { AuthUserModel } from '../../model/AuthUserModel';
 import { TokenParserService } from './token-parser.service';
 
 @Injectable()
-export class SignInService<TUser extends AuthUserModel> {
+export class SignInService<TUser> {
 
 constructor(
   private deviceIdService: DeviceIdService,
@@ -33,51 +32,25 @@ constructor(
       const authDataRequest = this.authApiService.signInAsync(userName, password, deviceId);
       authDataRequest.then((data: AuthResult<TUser> | null) => {
         if (data?.IsSuccess) {
-          const info = this.tokenParser.parseToken(data.Token.Token);
-
-          this.accessTokenStorage.save(data.Token, data.User);
+          const authData = this.accessTokenStorage.save(data);
           this.refreshTokenStorage.save(data.RefreshToken);
-
-
-          const authData = {User: data.User, Token : data.Token};
           resolve(authData);
         } else {
           reject(data);
         }
       }).catch((error: any) => {
           console.error(error);
-          const authres: AuthResult<TUser> = {
-            IsSuccess: false,
-            Result: AuthResultType.Failed,
-            RefreshToken: null,
-            Token: null,
-            User: null,
-          };
-          reject(authres);
+          reject(AuthResultType.Failed);
       });
     });
     return result;
   }
 
-  decode(encryptedText: string | null): string | null {
-    if (!encryptedText) {
-      return null;
-    }
-
-    try {
-      return decodeURIComponent(atob(encryptedText).split('').map((c) => {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-    } catch (error) {
-      return null;
-    }
-  }
-
   customsignIn(authResult: AuthResult<TUser>): AuthData<TUser> | null {
     if (authResult?.IsSuccess) {
-      this.accessTokenStorage.save(authResult.Token, authResult.User);
+      const authData = this.accessTokenStorage.save(authResult);
       this.refreshTokenStorage.save(authResult.RefreshToken);
-      return {User: authResult.User, Token : authResult.Token};
+      return authData;
     }
     return null;
   }

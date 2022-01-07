@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { TokenInfo } from '../../model/AuthToken';
+import { AccessTokenInfo } from '../../model/AccessTokenInfo';
 import { ClaimModel } from '../../model/ClaimModel';
 import { CryptoService } from './storage/crypto.service';
 
@@ -10,11 +10,14 @@ export class TokenParserService {
     private crypto: CryptoService,
   ) { }
 
-  parseToken(token: string): TokenInfo {
+  parseToken(token: string): AccessTokenInfo {
     const start = token.indexOf('.') + 1;
     const end = token.indexOf('.', start);
     const payload = token.substring(start, end);
     const pl =  this.crypto.decode(payload);
+    if (!pl) {
+      throw new Error('Unable to parse access token');
+    }
     const plObj = JSON.parse(pl);
 
     const claims = new Array<ClaimModel>();
@@ -31,7 +34,7 @@ export class TokenParserService {
           });
         } else {
           if (typeof element === 'object' && element.length !== undefined) {
-            element.forEach(claimItem => {
+            element.forEach((claimItem: string) => {
               claims.push({
                 Type: key,
                 Value: claimItem,
@@ -42,9 +45,9 @@ export class TokenParserService {
       }
     }
 
-    const info: TokenInfo = {
-      ExpireDate: new Date(plObj.exp * 1000),
-      IssueDate: new Date(plObj.nbf * 1000),
+    const info: AccessTokenInfo = {
+      Expires: plObj.exp,
+      Issued: plObj.nbf, // plObj.iat // Issued at
       Claims: claims
     };
     return info;

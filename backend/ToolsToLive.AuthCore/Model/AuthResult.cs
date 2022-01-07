@@ -2,7 +2,7 @@ using ToolsToLive.AuthCore.Interfaces.Model;
 
 namespace ToolsToLive.AuthCore.Model
 {
-    public class AuthResult<T> where T : IUser
+    public class AuthResult<T> where T : IAuthCoreUser
     {
         public AuthResult(AuthResultType result)
         {
@@ -19,9 +19,9 @@ namespace ToolsToLive.AuthCore.Model
         /// </summary>
         public T User { get; set; }
 
-        public IAuthToken Token { get; set; }
+        public string AccessToken { get; set; }
 
-        public IAuthToken RefreshToken { get; set; }
+        public RefreshToken RefreshToken { get; set; }
 
         public bool IsSuccess => Result == AuthResultType.Success;
     }

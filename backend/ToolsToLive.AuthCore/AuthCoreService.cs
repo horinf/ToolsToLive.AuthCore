@@ -12,7 +12,7 @@ using ToolsToLive.AuthCore.Model;
 
 namespace ToolsToLive.AuthCore
 {
-    public class AuthCoreService<TUser> : IAuthCoreService<TUser> where TUser : IUser
+    public class AuthCoreService<TUser> : IAuthCoreService<TUser> where TUser : IAuthCoreUser
     {
         private readonly IUserStorageService<TUser> _userStore;
         private readonly IRefreshTokenStorageService _refreshTokenStorageService;
@@ -108,7 +108,7 @@ namespace ToolsToLive.AuthCore
                 throw new ArgumentNullException(nameof(deviceId));
             }
 
-            var token = _identityService.GenerateAuthToken(user);
+            var accessToken = _identityService.GenerateAuthToken(user);
             var refreshToken = _identityService.GenerateRefreshToken(user);
 
             await _refreshTokenStorageService.SaveNewRefreshToken(refreshToken, deviceId);
@@ -123,7 +123,7 @@ namespace ToolsToLive.AuthCore
                 _authCookiesHelper.SetAuthCookie(responseCookies, cookieToken.Token, cookieToken.ExpireDate);
             }
 
-            return PrepareAuthResult(user, token, refreshToken);
+            return PrepareAuthResult(user, accessToken.Token, refreshToken);
         }
 
         public async Task SignOut(string userId, string deviceId, IRequestCookieCollection requestCookies, IResponseCookies responseCookies)
@@ -189,7 +189,7 @@ namespace ToolsToLive.AuthCore
             }
 
             // create token and refresh token
-            var token = _identityService.GenerateAuthToken(user);
+            var accessToken = _identityService.GenerateAuthToken(user);
             var refreshToken = _identityService.GenerateRefreshToken(user);
 
             await _refreshTokenStorageService.UpdateRefreshToken(userId, deviceId, refreshToken);
@@ -204,7 +204,7 @@ namespace ToolsToLive.AuthCore
                 _authCookiesHelper.SetAuthCookie(responseCookies, cookieToken.Token, cookieToken.ExpireDate);
             }
 
-            return PrepareAuthResult(user, token, refreshToken);
+            return PrepareAuthResult(user, accessToken.Token, refreshToken);
         }
 
         /// <summary>
@@ -236,13 +236,13 @@ namespace ToolsToLive.AuthCore
             return false;
         }
 
-        private AuthResult<TUser> PrepareAuthResult(TUser user, IAuthToken token, IAuthToken refreshToken)
+        private AuthResult<TUser> PrepareAuthResult(TUser user, string accessToken, RefreshToken refreshToken)
         {
-            //user.PasswordHash = null; //Do not show password hash to user (it should have attribute JsonIgnore)
+            user.PasswordHash = null; //Do not show password hash to user (it should have attribute JsonIgnore, but just in case)
 
             return new AuthResult<TUser>(AuthResultType.Success)
             {
-                Token = token,
+                AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 User = user
             };

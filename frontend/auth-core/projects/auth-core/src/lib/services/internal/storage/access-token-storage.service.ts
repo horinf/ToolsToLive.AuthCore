@@ -2,14 +2,14 @@ import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { AuthCoreSettings, AUTH_CORE_SETTINGS_TOKEN } from '../../../model/auth-core-settings';
 import { AuthData } from '../../../model/AuthData';
-import { AuthToken } from '../../../model/AuthToken';
-import { AuthUserModel } from '../../../model/AuthUserModel';
+import { AuthResult } from '../../../model/AuthResult';
+import { TokenParserService } from '../token-parser.service';
 import { LocalStorageService } from './local-storage.service';
 import { MemoryStorageService } from './memory-storage.service';
 import { SessionStorageService } from './session-storage.service';
 
 @Injectable()
-export class AccessTokenStorage<TUser extends AuthUserModel>  {
+export class AccessTokenStorage<TUser>  {
   private readonly storageKey: string = 'mydomain_at';
 
   constructor(
@@ -18,6 +18,7 @@ export class AccessTokenStorage<TUser extends AuthUserModel>  {
     private sessionStorage: SessionStorageService,
     private localStorage: LocalStorageService,
     private memoryStorage: MemoryStorageService,
+    private tokenParser: TokenParserService,
   ) {
     this.storageKey = this.settings.refreshTokenCookieDomain + '_at';
   }
@@ -53,6 +54,10 @@ export class AccessTokenStorage<TUser extends AuthUserModel>  {
       authString = this.memoryStorage.load(this.storageKey); // on the server side memory storage can be used only
     }
 
+    if (!authString) {
+      return null;
+    }
+
     try {
       return JSON.parse(authString);
     } catch (error) {
@@ -62,14 +67,20 @@ export class AccessTokenStorage<TUser extends AuthUserModel>  {
     }
   }
 
-  save(authToken: AuthToken, user: TUser): void {
-    const realDiff = authToken.ExpireDate.valueOf() - authToken.IssueDate.valueOf();
+  save(data: AuthResult<TUser>): AuthData<TUser> {
+    const info = this.tokenParser.parseToken(data.AccessToken);
+    const realDiff = (info.Expires - info.Issued) * 1000; // in milliseconds
     const expDateValue = (new Date()).valueOf() + realDiff - 3000;
-    authToken.BrowserExpireDate = new Date(expDateValue);
-    authToken.LifeTime = realDiff;
 
-    const authData: AuthData<TUser> = { Token: authToken, User: user };
+    const authData: AuthData<TUser> = {
+      User: data.User,
+      AccessToken: data.AccessToken,
+      BrowserExpireDate: expDateValue, // new Date(expDateValue);
+      LifeTime: realDiff,
+      Claims: info.Claims,
+     };
     const authString = JSON.stringify(authData);
+
     if (isPlatformBrowser(this.platformId)) {
       switch (this.settings.accessTokenStorage ?? 'sessionStorage') {
         case 'memory':
@@ -97,6 +108,8 @@ export class AccessTokenStorage<TUser extends AuthUserModel>  {
     } else {
       this.memoryStorage.save(this.storageKey, authString); // on the server side memory storage can be used only
     }
+
+    return authData;
   }
 
   clean(): void {

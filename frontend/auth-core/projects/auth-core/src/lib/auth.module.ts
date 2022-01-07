@@ -11,7 +11,6 @@ import { LocalStorageService } from './services/internal/storage/local-storage.s
 import { CookieStorageService } from './services/internal/storage/cookie-storage.service';
 import { CryptoService } from './services/internal/storage/crypto.service';
 import { AccessService } from './services/access.service';
-import { AuthUserModel } from './model/AuthUserModel';
 import { SessionStorageService } from './services/internal/storage/session-storage.service';
 import { MemoryStorageService } from './services/internal/storage/memory-storage.service';
 import { TokenParserService } from './services/internal/token-parser.service';
@@ -20,8 +19,8 @@ import { TokenParserService } from './services/internal/token-parser.service';
   imports: [
   ]
 })
-export class AuthModule<TUser extends AuthUserModel> {
-  static forRoot<TUser extends AuthUserModel>(): ModuleWithProviders<AuthModule<TUser>> {
+export class AuthModule<TUser> {
+  static forRoot<TUser>(): ModuleWithProviders<AuthModule<TUser>> {
     return {
       ngModule: AuthModule,
       providers: [

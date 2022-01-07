@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import { AuthCoreSettings, AUTH_CORE_SETTINGS_TOKEN } from '../../../model/auth-core-settings';
-import { AuthToken } from '../../../model/AuthToken';
+import { RefreshToken } from '../../../model/RefreshToken';
 import { CookieStorageService } from './cookie-storage.service';
 
 @Injectable()
@@ -14,14 +14,14 @@ export class RefreshTokenStorage {
     this.storageName = settings.refreshTokenCookieDomain + '_rt';
   }
 
-  load(): AuthToken | null {
+  load(): RefreshToken | null {
     const fromStore: string | null = this.cookieStorage.load(this.storageName);
     if (!fromStore) {
       return null;
     }
 
     try {
-      const result = JSON.parse(fromStore);
+      const result: RefreshToken = JSON.parse(fromStore);
 
       result.IssueDate = new Date(result.IssueDate);
       result.ExpireDate = new Date(result.ExpireDate);
@@ -38,7 +38,7 @@ export class RefreshTokenStorage {
     return this.cookieStorage.isExist(this.storageName);
   }
 
-  save(authToken: AuthToken): void {
+  save(authToken: RefreshToken): void {
     const realDiff = authToken.ExpireDate.valueOf() - authToken.IssueDate.valueOf();
     const expDateValue = (new Date()).valueOf() + realDiff - 3000;
     authToken.BrowserExpireDate = new Date(expDateValue); // time in the browser may differ from the time on the server

@@ -6,6 +6,6 @@ namespace ToolsToLive.AuthCore.Interfaces.IdentityServices
 {
     public interface IIdentityProvider
     {
-        List<Claim> GetClaimsForUser(IUser user);
+        List<Claim> GetClaimsForUser(IAuthCoreUser user);
     }
 }
