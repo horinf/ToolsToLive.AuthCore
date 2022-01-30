@@ -31,7 +31,7 @@ constructor(
 
       const authDataRequest = this.authApiService.signInAsync(userName, password, deviceId);
       authDataRequest.then((data: AuthResult<TUser> | null) => {
-        if (data?.IsSuccess) {
+        if (data?.IsSuccess && data.RefreshToken && data.AccessToken && data.User) {
           const authData = this.accessTokenStorage.save(data);
           this.refreshTokenStorage.save(data.RefreshToken);
           resolve(authData);
@@ -40,14 +40,21 @@ constructor(
         }
       }).catch((error: any) => {
           console.error(error);
-          reject(AuthResultType.Failed);
+          const authres: AuthResult<TUser> = {
+            IsSuccess: false,
+            Result: AuthResultType.Failed,
+            RefreshToken: null,
+            AccessToken: null,
+            User: null,
+          };
+          reject(authres);
       });
     });
     return result;
   }
 
   customsignIn(authResult: AuthResult<TUser>): AuthData<TUser> | null {
-    if (authResult?.IsSuccess) {
+    if (authResult?.IsSuccess && authResult.RefreshToken && authResult.AccessToken && authResult.User) {
       const authData = this.accessTokenStorage.save(authResult);
       this.refreshTokenStorage.save(authResult.RefreshToken);
       return authData;

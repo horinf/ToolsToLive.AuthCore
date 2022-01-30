@@ -4,7 +4,6 @@ import { AuthResult } from '../../model/AuthResult';
 import { AccessTokenStorage } from './storage/access-token-storage.service';
 import { AuthApiService } from './auth-api.service';
 import { RefreshTokenStorage } from './storage/refresh-token-storage.service';
-import { AuthResultType } from '../../model/AuthResultType';
 
 @Injectable()
 export class TokenRefreshService<TUser> {
@@ -32,7 +31,7 @@ export class TokenRefreshService<TUser> {
 
       const authDataRequest = this.authApiService.refreshTokenAsync(refreshToken.UserId, refreshToken.Token, '');
       authDataRequest.then((data: AuthResult<TUser> | null) => {
-        if (data?.IsSuccess) {
+        if (data?.IsSuccess && data.RefreshToken) {
           const authData = this.accessTokenStorage.save(data);
           this.refreshTokenStorage.save(data.RefreshToken);
           resolve(authData);
@@ -40,11 +39,11 @@ export class TokenRefreshService<TUser> {
           this.refreshTokenStorage.clean();
           this.accessTokenStorage.clean();
           console.warn('Something went wrong - unable to refresh token');
-          reject(data?.Result ?? AuthResultType.Failed);
+          reject('Something went wrong - unable to refresh token');
         }
       }).catch((error: any) => {
         console.error(error);
-        reject(AuthResultType.Failed);
+        reject(error);
       }).finally(() => {
       });
     });

@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { AuthData } from '..//model/AuthData';
 import { AuthResult } from '../model/AuthResult';
-import { AuthResultType } from '../model/AuthResultType';
 import { AuthDataService } from './internal/auth-data.service';
 import { DeviceIdService } from './internal/device-id.service';
 import { SignInService } from './internal/sign-in.service';
@@ -43,7 +42,7 @@ export class AuthService<TUser> {
     const signInResult = this.signInService.signInAsync(userName, password);
     signInResult.then((authData: AuthData<TUser>) => {
       this.authUpdate(authData);
-    }).catch((err: AuthResultType) => {
+    }).catch((err: AuthResult<TUser> | null) => {
       this.authUpdate(null);
     });
     return signInResult;

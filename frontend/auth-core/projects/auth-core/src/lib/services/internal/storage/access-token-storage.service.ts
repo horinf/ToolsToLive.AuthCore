@@ -68,6 +68,14 @@ export class AccessTokenStorage<TUser>  {
   }
 
   save(data: AuthResult<TUser>): AuthData<TUser> {
+    if (!data.AccessToken) {
+      throw Error('AccessToken is not set');
+    }
+
+    if (!data.User) {
+      throw Error('User is not set');
+    }
+
     const info = this.tokenParser.parseToken(data.AccessToken);
     const realDiff = (info.Expires - info.Issued) * 1000; // in milliseconds
     const expDateValue = (new Date()).valueOf() + realDiff - 3000;

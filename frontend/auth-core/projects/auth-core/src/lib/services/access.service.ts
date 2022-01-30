@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AuthData } from '../model/AuthData';
+import { ClaimModel } from '../model/ClaimModel';
 import { AuthService } from './auth.service';
 
 @Injectable()
@@ -13,6 +14,23 @@ export class AccessService<TUser> {
   constructor(
     private authService: AuthService<TUser>
   ) { }
+
+  async getRolesAsync(): Promise<string[]> {
+    const authData = await this.authService.getAuthDataAsync();
+    return this.getRoles(authData);
+  }
+
+  getRoles(authData: AuthData<TUser> | null): string[] {
+    const roles = new Array<string>();
+    if (!authData || !authData.Claims || authData.Claims.length === 0) {
+      return roles;
+    }
+    const claims = this.getClaims(authData, AccessService.RoleClaim);
+    claims.forEach(claim => {
+      roles.push(claim.Value);
+    });
+    return roles;
+  }
 
   async isInOneOfRolesAsync(...role: string[]): Promise<boolean> {
     const authData = await this.authService.getAuthDataAsync();
@@ -37,6 +55,34 @@ export class AccessService<TUser> {
       return false;
     }
     return this.hasClaim(authData, AccessService.RoleClaim, role);
+  }
+
+  async getClaimsAsync(type: string): Promise<ClaimModel[]> {
+    const authData = await this.authService.getAuthDataAsync();
+    return this.getClaims(authData, type);
+  }
+
+  getClaims(authData: AuthData<TUser> | null, type: string): ClaimModel[] {
+    if (!authData?.Claims || !(authData?.Claims.length > 0)) {
+      return new Array<ClaimModel>();
+    }
+
+    return authData.Claims.filter(x => x.Type === type);
+  }
+
+  async hasAnyClaimAsync(type: string): Promise<boolean> {
+    const authData = await this.authService.getAuthDataAsync();
+    return this.hasAnyClaim(authData, type);
+  }
+
+  hasAnyClaim(authData: AuthData<TUser> | null, type: string): boolean {
+    if (!authData?.Claims || !(authData?.Claims.length > 0)) {
+      return false;
+    }
+    if (authData.Claims.findIndex(x => x.Type === type) > -1) {
+      return true;
+    }
+    return false;
   }
 
   async hasClaimAsync(type: string, value: string): Promise<boolean> {

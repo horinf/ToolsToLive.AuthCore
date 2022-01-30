@@ -3,8 +3,8 @@ import { RefreshToken } from './RefreshToken';
 
 export interface AuthResult<TUser> {
   Result: AuthResultType;
-  User: TUser;
-  AccessToken: string;
-  RefreshToken: RefreshToken;
+  User: TUser | null;
+  AccessToken: string | null;
+  RefreshToken: RefreshToken | null;
   IsSuccess: boolean;
 }
