@@ -19,8 +19,8 @@ import { TokenParserService } from './services/internal/token-parser.service';
   imports: [
   ]
 })
-export class AuthModule<TUser> {
-  static forRoot<TUser>(): ModuleWithProviders<AuthModule<TUser>> {
+export class AuthModule {
+  static forRoot(): ModuleWithProviders<AuthModule> {
     return {
       ngModule: AuthModule,
       providers: [
