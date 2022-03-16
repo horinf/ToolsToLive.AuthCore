@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Base64 } from 'js-base64';
 // import * as CryptoJS from 'crypto-js';
 
 @Injectable()
@@ -6,16 +7,19 @@ export class CryptoService {
 
   constructor() { }
 
+  // https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings
   encode(plainText: string): string {
     if (!plainText) {
       return '';
     }
 
-    return btoa(encodeURIComponent(plainText).replace(/%([0-9A-F]{2})/g,
-        // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-        function toSolidBytes(match, p1): string {
-            return String.fromCharCode(('0x' + p1) as any);
-    }));
+    return Base64.encode(plainText, true);
+
+    // return btoa(encodeURIComponent(plainText).replace(/%([0-9A-F]{2})/g,
+    //     // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
+    //     function toSolidBytes(match, p1): string {
+    //         return String.fromCharCode(('0x' + p1) as any);
+    // }));
   }
 
   decode(encryptedText: string | null): string | null {
@@ -24,9 +28,11 @@ export class CryptoService {
     }
 
     try {
-      return decodeURIComponent(atob(encryptedText).split('').map((c) => {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
+      return Base64.decode(encryptedText);
+      
+      // return decodeURIComponent(atob(encryptedText).split('').map((c) => {
+      //     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      //   }).join(''));
     } catch (error) {
       return null;
     }
