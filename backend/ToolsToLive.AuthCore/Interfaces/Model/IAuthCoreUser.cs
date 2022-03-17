@@ -40,5 +40,11 @@ namespace ToolsToLive.AuthCore.Interfaces.Model
 
         [JsonIgnore]
         int AccessFailedCount { get; set; }
+
+        /// <summary>
+        /// Version of the password -- can be used if you changed salt or old users with old password hashes exist in database
+        /// </summary>
+        [JsonIgnore]
+        int PasswordVersion { get; set; }
     }
 }

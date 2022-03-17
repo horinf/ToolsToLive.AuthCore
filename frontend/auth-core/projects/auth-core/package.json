@@ -1,10 +1,10 @@
 {
   "name": "@tools-to-live/auth-core",
-  "version": "3.0.0-alpha.7",
+  "version": "3.0.0-alpha.8",
   "peerDependencies": {
     "@angular/common": ">=11.2.8",
     "@angular/core": ">=11.2.8",
-    "js-base64": "3.7.2",
+    "js-base64": "^3.7.2",
     "rxjs": "^6.6.3"
   },
   "dependencies": {

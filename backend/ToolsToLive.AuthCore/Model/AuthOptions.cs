@@ -15,50 +15,72 @@ namespace ToolsToLive.AuthCore.Model
         /// The one that creates the token (identity server).
         /// Any valid string.
         /// </summary>
-        public string Issuer { get; set; } = DefaultIssuer;
-        public static string DefaultIssuer { get; set; } = "AuthCoreIssuer";
+        public string Issuer { get; set; } = IssuerDefault;
+        public static string IssuerDefault { get; } = "AuthCoreIssuer";
 
         /// <summary>
         /// The one for which the token should be created (consumer).
         /// Any valid string.
         /// </summary>
-        public string Audience { get; set; } = DefaultAudience;
-        public static string DefaultAudience { get; set; } = "AuthCoreAudience";
+        public string Audience { get; set; } = AudienceDefault;
+        public static string AudienceDefault { get; } = "AuthCoreAudience";
 
         /// <summary>
         /// Token lifetime.
         /// </summary>
-        public TimeSpan TokenLifetime { get; set; } = DefaultTokenLifetime;
-        public static TimeSpan DefaultTokenLifetime { get; set; } = TimeSpan.FromMinutes(40);
+        public TimeSpan TokenLifetime { get; set; } = TokenLifetimeDefault;
+        public static TimeSpan TokenLifetimeDefault { get; } = TimeSpan.FromMinutes(40);
 
         /// <summary>
         /// Refresh token lifetime.
         /// </summary>
-        public TimeSpan RefreshTokenLifeTime { get; set; } = DefaultRefreshTokenLifeTime;
-        public static TimeSpan DefaultRefreshTokenLifeTime { get; set; } = TimeSpan.FromDays(7);
+        public TimeSpan RefreshTokenLifeTime { get; set; } = RefreshTokenLifeTimeDefault;
+        public static TimeSpan RefreshTokenLifeTimeDefault { get; } = TimeSpan.FromDays(7);
 
-        public int MaxAccessFailedCount { get; set; } = DefaultMaxAccessFailedCount;
-        public static int DefaultMaxAccessFailedCount { get; set; } = 12;
+        /// <summary>
+        /// How many attempts can be failed before user is locked (for LockoutPeriod)
+        /// </summary>
+        public int MaxAccessFailedCount { get; set; } = MaxAccessFailedCountDefault;
+        public static int MaxAccessFailedCountDefault { get; } = 12;
 
-        public TimeSpan LockoutPeriod { get; set; } = DefaultLockoutPeriod;
-        public static TimeSpan DefaultLockoutPeriod { get; set; } = TimeSpan.FromSeconds(15);
+        /// <summary>
+        /// User lockout period if MaxAccessFailedCount is reached
+        /// </summary>
+        public TimeSpan LockoutPeriod { get; set; } = LockoutPeriodDefault;
+        public static TimeSpan LockoutPeriodDefault { get; } = TimeSpan.FromSeconds(15);
+
+        /// <summary>
+        /// Whether to use the user Id as an additional salt to the password (recommended)
+        /// </summary>
+        public bool UseUserIdSalt { get; set; } = UseUserIdSaltDefault;
+        public static bool UseUserIdSaltDefault { get; } = true;
+
+        /// <summary>
+        /// Additional salt that is being added to password
+        /// Be careful - if you change it, old passwords will no longer be valid
+        /// </summary>
+        public string ExtraSalt { get; set; } = ExtraSaltDefault;
+        public static string ExtraSaltDefault { get; } = "";
 
         // Cookies
 
-        public bool AddTokenToCookie { get; set; } = DefaultAddTokenToCookie;
-        public static bool DefaultAddTokenToCookie { get; set; } = true;
+        /// <summary>
+        /// Wheter cookies is used to stroe token along the way (token will be returned as response to signIn request anyway)
+        /// </summary>
+        public bool AddTokenToCookie { get; set; } = AddTokenToCookieDefault;
+        public static bool AddTokenToCookieDefault { get; } = true;
 
-        public string AuthCookieName { get; set; } = DefaultAuthCookieName;
-        public static string DefaultAuthCookieName { get; set; } = "AuthCoreCookie";
+        public string AuthCookieName { get; set; } = AuthCookieNameDefault;
+        public static string AuthCookieNameDefault { get; } = "AuthCoreCookie";
 
-        public string DeviceIdCookieName { get; set; } = DefaultDeviceIdCookieName;
-        public static string DefaultDeviceIdCookieName { get; set; } = "AuthCoreDeviceIdCookie";
+        public string DeviceIdCookieName { get; set; } = DeviceIdCookieNameDefault;
+        public static string DeviceIdCookieNameDefault { get; } = "AuthCoreDeviceIdCookie";
 
-        public bool CookieSecure { get; set; } = DefaultCookieSecure;
-        public static bool DefaultCookieSecure { get; set; } = true;
+        public bool CookieSecure { get; set; } = CookieSecureDefault;
+        public static bool CookieSecureDefault { get; } = true;
 
-        public SameSiteMode CookieSameSiteMode { get; set; } = DefaultCookieSameSiteMode;
-        public static SameSiteMode DefaultCookieSameSiteMode { get; set; } = SameSiteMode.Strict;
+        public SameSiteMode CookieSameSiteMode { get; set; } = CookieSameSiteModeDefault;
+        public static SameSiteMode CookieSameSiteModeDefault { get; } = SameSiteMode.Strict;
 
         /// <summary>
         /// The name of the domain for which the cookie will be set (eg 'mydomain.com')
@@ -70,8 +92,8 @@ namespace ToolsToLive.AuthCore.Model
         /// Path for auth cookie (eg 'api/auth')
         /// '/' by default, but it's strongly recommended to set something like 'api/auth'
         /// </summary>
-        public string CookiePath { get; set; } = DefaultCookiePath;
-        public static string DefaultCookiePath { get; set; } = "/";
+        public string CookiePath { get; set; } = CookiePathDefault;
+        public static string CookiePathDefault { get; } = "/";
 
 
 
@@ -81,7 +103,5 @@ namespace ToolsToLive.AuthCore.Model
         //public TimeSpan ChangePasswordCodeLifeTime { get; set; }
 
         //public string OauthRedirectUrl { get; set; }
-
-        //public string ExtraSalt { get; set; }
     }
 }

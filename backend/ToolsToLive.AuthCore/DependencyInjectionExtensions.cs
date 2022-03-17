@@ -44,6 +44,7 @@ namespace ToolsToLive.AuthCore
             services.AddSingleton<IIdentityValidationService, IdentityValidationService>();
 
             services.AddSingleton<IPasswordHasher, PasswordHasher>();
+            services.AddSingleton<IPasswordSalter, PasswordSalter>();
             services.AddSingleton<IIdentityProvider, IdentityProvider>();
             services.AddSingleton<IIdentityService, IdentityService>();
             services.AddSingleton<ICodeGenerator, CodeGenerator>();

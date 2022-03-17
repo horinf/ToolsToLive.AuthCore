@@ -12,7 +12,7 @@ namespace ToolsToLive.AuthCore.Interfaces
         /// Gets ClaimsPrincipal by access token
         /// </summary>
         /// <param name="token"></param>
-        /// <returns></returns>
+        /// <returns>ClaimsPrincipal</returns>
         ClaimsPrincipal GetPrincipalByToken(string token);
 
         /// <summary>

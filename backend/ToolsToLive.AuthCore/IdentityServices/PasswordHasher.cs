@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -15,20 +16,26 @@ namespace ToolsToLive.AuthCore.IdentityServices
         /// Hashes password. It is a good idea to add salt to password.
         /// </summary>
         /// <returns>Hash of password</returns>
-        public string HashPassword(string password)
+        public string HashPassword(string password, int passwordVersion)
         {
-            var sha = new SHA512Managed();
-            var hash = sha.ComputeHash(Encoding.Unicode.GetBytes(password));
-            return FromByteToHex(hash);
+            switch (passwordVersion)
+            {
+                case 1:
+                    var sha = new SHA512Managed();
+                    var hash = sha.ComputeHash(Encoding.Unicode.GetBytes(password));
+                    return FromByteToHex(hash);
+                default:
+                    throw new NotImplementedException($"Password version {passwordVersion} not supported by PasswordHasher");
+            }
         }
 
         /// <summary>
         /// Verifies password. If you added salt when setting a password, do not forget to add it to the password provided.
         /// </summary>
         /// <returns>True if password matchs to hash</returns>
-        public bool VerifyPassword(string hashedPassword, string providedPassword)
+        public bool VerifyPassword(string hashedPassword, string providedPassword, int passwordVersion)
         {
-            var hash = HashPassword(providedPassword).ToLowerInvariant();
+            var hash = HashPassword(providedPassword, passwordVersion).ToLowerInvariant();
             return hash.Equals(hashedPassword.ToLowerInvariant());
         }
 

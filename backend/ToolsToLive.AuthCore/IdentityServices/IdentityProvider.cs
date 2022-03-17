@@ -23,8 +23,8 @@ namespace ToolsToLive.AuthCore.IdentityServices
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserName),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(AuthCoreConstants.UserNameClaim, user.UserName),
+                new Claim(AuthCoreConstants.UserIdClaim, user.Id),
             };
 
             if (user.Roles != null)

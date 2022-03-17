@@ -19,6 +19,7 @@ namespace ToolsToLive.AuthCore
         private readonly IIdentityService _identityService;
         private readonly IOptions<AuthOptions> _options;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IPasswordSalter _passwordSalter;
         private readonly IAuthCookiesHelper _authCookiesHelper;
         private readonly IIdentityValidationService _identityValidationService;
 
@@ -28,6 +29,7 @@ namespace ToolsToLive.AuthCore
             IIdentityService identityService,
             IOptions<AuthOptions> options,
             IPasswordHasher passwordHasher,
+            IPasswordSalter passwordSalter,
             IAuthCookiesHelper authCookiesHelper,
             IIdentityValidationService identityValidationService)
         {
@@ -36,16 +38,19 @@ namespace ToolsToLive.AuthCore
             _identityService = identityService;
             _options = options;
             _passwordHasher = passwordHasher;
+            _passwordSalter = passwordSalter;
             _authCookiesHelper = authCookiesHelper;
             _identityValidationService = identityValidationService;
         }
 
+        /// <inheritdoc />
         public ClaimsPrincipal GetPrincipalByToken(string token)
         {
             var principal = _identityValidationService.GetPrincipalFromToken(token);
             return principal;
         }
 
+        /// <inheritdoc />
         public async Task<AuthResult<TUser>> SignIn(string userNameOrEmail, string password, string deviceId, IResponseCookies responseCookies)
         {
             if (string.IsNullOrWhiteSpace(deviceId))
@@ -61,13 +66,15 @@ namespace ToolsToLive.AuthCore
                 return new AuthResult<TUser>(AuthResultType.UserNotFound);
             }
 
+            // checking if user is locked out (exceeded number of password attempts)
             if (user.LockoutEndDate.HasValue && user.LockoutEndDate > DateTime.UtcNow)
             {
                 return new AuthResult<TUser>(AuthResultType.LockedOut);
             }
 
             // password verification
-            if (!_passwordHasher.VerifyPassword(user.PasswordHash, password))
+            var saltedPassword = _passwordSalter.SaltPassword(user, password);
+            if (!_passwordHasher.VerifyPassword(user.PasswordHash, saltedPassword, user.PasswordVersion))
             {
                 user.AccessFailedCount++;
                 if (user.AccessFailedCount > _options.Value.MaxAccessFailedCount)
@@ -88,6 +95,7 @@ namespace ToolsToLive.AuthCore
             return await SignIn(user, deviceId, responseCookies);
         }
 
+        /// <inheritdoc />
         public async Task<AuthResult<TUser>> SignIn(string userId, string deviceId, IResponseCookies responseCookies)
         {
             // retreive user from db
@@ -126,8 +134,11 @@ namespace ToolsToLive.AuthCore
             return PrepareAuthResult(user, accessToken.Token, refreshToken);
         }
 
+        /// <inheritdoc />
         public async Task SignOut(string userId, string deviceId, IRequestCookieCollection requestCookies, IResponseCookies responseCookies)
         {
+            // Mobile apps can't use cookies, but they can store device id by themselves and should send it along the request.
+            // For websites, the deviceId will always come from cookies.
             if (string.IsNullOrEmpty(deviceId))
             {
                 deviceId = _authCookiesHelper.GetDeviceIdFromCookie(requestCookies);
@@ -144,21 +155,31 @@ namespace ToolsToLive.AuthCore
             }
 
             _authCookiesHelper.ClearDeviceIdCookie(responseCookies);
-            _authCookiesHelper.ClearAuthCookie(responseCookies);
+            if (_options.Value.AddTokenToCookie)
+            {
+                _authCookiesHelper.ClearAuthCookie(responseCookies);
+            }
 
             await _refreshTokenStorageService.DeleteRefreshToken(userId, deviceId);
         }
 
+        /// <inheritdoc />
         public async Task SignOutFromEverywhere(string userId, IResponseCookies responseCookies)
         {
             _authCookiesHelper.ClearDeviceIdCookie(responseCookies);
-            _authCookiesHelper.ClearAuthCookie(responseCookies);
+            if (_options.Value.AddTokenToCookie)
+            {
+                _authCookiesHelper.ClearAuthCookie(responseCookies);
+            }
 
             await _refreshTokenStorageService.DeleteRefreshTokens(userId);
         }
 
+        /// <inheritdoc />
         public async Task<AuthResult<TUser>> RefreshToken(string userId, string deviceId, string providedRefreshToken, IRequestCookieCollection requestCookies, IResponseCookies responseCookies)
         {
+            // Mobile apps can't use cookies, but they can store device id by themselves and should send it along the request.
+            // For websites, the deviceId will always come from cookies.
             if (string.IsNullOrEmpty(deviceId))
             {
                 deviceId = _authCookiesHelper.GetDeviceIdFromCookie(requestCookies);
