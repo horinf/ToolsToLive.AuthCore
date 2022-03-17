@@ -31,7 +31,7 @@ namespace ToolsToLive.AuthCore.IdentityServices
             {
                 foreach (var item in user.Roles)
                 {
-                    claims.Add(new Claim(ClaimsIdentity.DefaultRoleClaimType, item));
+                    claims.Add(new Claim(AuthCoreConstants.RoleClaim, item));
                 }
             }
 

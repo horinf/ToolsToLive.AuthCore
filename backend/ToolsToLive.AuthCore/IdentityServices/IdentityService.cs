@@ -46,7 +46,7 @@ namespace ToolsToLive.AuthCore.IdentityServices
         public AuthToken GenerateAuthTokenForCookie(IAuthCoreUser user)
         {
             var claims = _identityProvider.GetClaimsForUser(user);
-            claims.Add(new Claim(AuthCoreConstants.TokenTransportClaim, TokenTransport.Cookie.ToString()));
+            claims.Add(new Claim(AuthCoreConstants.TokenTransportClaim, TokenTransport.Cookie.ToString())); // will be checked when parsing
             (string encodedJwt, DateTime expires) = GenerateJwtToken(claims, _authOptions.Value.TokenLifetime);
 
             var token = new AuthToken
