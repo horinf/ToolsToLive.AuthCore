@@ -92,9 +92,15 @@ namespace ToolsToLive.AuthCore.Model
         /// Path for auth cookie (eg 'api/auth')
         /// '/' by default, but it's strongly recommended to set something like 'api/auth'
         /// </summary>
-        public string CookiePath { get; set; } = CookiePathDefault;
-        public static string CookiePathDefault { get; } = "/";
+        public string DeviceIdCookiePath { get; set; } = DeviceIdCookiePathDefault;
+        public static string DeviceIdCookiePathDefault { get; } = "/";
 
+        /// <summary>
+        /// Path for auth cookie (eg 'api/auth')
+        /// '/' by default
+        /// </summary>
+        public string AuthCookiePath { get; set; } = AuthCookiePathDefault;
+        public static string AuthCookiePathDefault { get; } = "/";
 
 
 

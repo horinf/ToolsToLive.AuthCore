@@ -1,6 +1,7 @@
 using System;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ToolsToLive.AuthCore.Interfaces.Helpers;
 using ToolsToLive.AuthCore.Interfaces.IdentityServices;
@@ -12,13 +13,16 @@ namespace ToolsToLive.AuthCore.Helpers
     {
         private readonly IIdentityValidationService _identityValidationService;
         private readonly IOptions<AuthOptions> _authOptions;
+        private readonly ILogger<AuthCookiesHelper> _logger;
 
         public AuthCookiesHelper(
             IIdentityValidationService identityValidationService,
-            IOptions<AuthOptions> authOptions)
+            IOptions<AuthOptions> authOptions,
+            ILogger<AuthCookiesHelper> logger)
         {
             _identityValidationService = identityValidationService;
             _authOptions = authOptions;
+            _logger = logger;
         }
 
         public string GetDeviceIdFromCookie(IRequestCookieCollection requestCookies)
@@ -35,7 +39,7 @@ namespace ToolsToLive.AuthCore.Helpers
             responseCookies.Append(_authOptions.Value.DeviceIdCookieName, deviceId, new CookieOptions()
             {
                 Domain = _authOptions.Value.CookieDomain,
-                Path = _authOptions.Value.CookiePath,
+                Path = _authOptions.Value.DeviceIdCookiePath,
                 HttpOnly = true,
                 Secure = _authOptions.Value.CookieSecure,
                 SameSite = _authOptions.Value.CookieSameSiteMode,
@@ -49,7 +53,7 @@ namespace ToolsToLive.AuthCore.Helpers
             responseCookies.Append(_authOptions.Value.DeviceIdCookieName, "", new CookieOptions()
             {
                 Domain = _authOptions.Value.CookieDomain,
-                Path = _authOptions.Value.CookiePath,
+                Path = _authOptions.Value.DeviceIdCookiePath,
                 HttpOnly = true,
                 Secure = _authOptions.Value.CookieSecure,
                 SameSite = _authOptions.Value.CookieSameSiteMode,
@@ -72,8 +76,9 @@ namespace ToolsToLive.AuthCore.Helpers
                     }
                     return principal;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    _logger.LogWarning(ex, "Unable to get ClaimsPrincipal from token (from cookies)");
                     return null;
                 }
             }
@@ -85,7 +90,7 @@ namespace ToolsToLive.AuthCore.Helpers
             responseCookies.Append(_authOptions.Value.AuthCookieName, token, new CookieOptions()
             {
                 Domain = _authOptions.Value.CookieDomain,
-                Path = "/",
+                Path = _authOptions.Value.AuthCookiePath,
                 HttpOnly = true,
                 Secure = _authOptions.Value.CookieSecure,
                 SameSite = _authOptions.Value.CookieSameSiteMode,
@@ -99,7 +104,7 @@ namespace ToolsToLive.AuthCore.Helpers
             responseCookies.Append(_authOptions.Value.AuthCookieName, "", new CookieOptions()
             {
                 Domain = _authOptions.Value.CookieDomain,
-                Path = "/",
+                Path = _authOptions.Value.AuthCookiePath,
                 HttpOnly = true,
                 Secure = _authOptions.Value.CookieSecure,
                 SameSite = _authOptions.Value.CookieSameSiteMode,
